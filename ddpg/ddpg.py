@@ -14,7 +14,7 @@ from ddpg.noise import AdaptiveParamNoiseSpec, NormalActionNoise, OrnsteinUhlenb
 from common import set_global_seeds
 import baselines.common.tf_util as U
 
-from baselines import logger
+import logger
 import numpy as np
 
 try:

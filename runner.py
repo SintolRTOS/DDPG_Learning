@@ -13,6 +13,7 @@ import gym
 from collections import defaultdict
 import tensorflow as tf
 import numpy as np
+from agent.wordagent import WordAgent
 
 from common.vec_env import VecFrameStack, VecNormalize, VecEnv
 from common.vec_env.vec_video_recorder import VecVideoRecorder
@@ -56,6 +57,10 @@ _game_envs['retro'] = {
     'SpaceInvaders-Snes',
 }
 
+_game_envs['wordgame'] = {
+        'ddpg',
+}
+
 
 class runner_imp(object):
     def __init__(self):
@@ -88,6 +93,7 @@ class runner_imp(object):
                 env=env,
                 seed=seed,
                 total_timesteps=total_timesteps,
+                render = True,
                 **alg_kwargs
                 )
 
@@ -102,11 +108,13 @@ class runner_imp(object):
 
         env_type, env_id = self.get_env_type(args)
 
-        if env_type in {'atari', 'retro'}:
+        if env_type in {'atari', 'retro', 'wordgame'}:
             if alg == 'deepq':
                 env = make_env(env_id, env_type, seed=seed, wrapper_kwargs={'frame_stack': True})
             elif alg == 'trpo_mpi':
                 env = make_env(env_id, env_type, seed=seed)
+            elif env_type == 'wordgame':
+                env = WordAgent('assert/keyword.xlsx','xlsx')
             else:
                 frame_stack_size = 4
                 env = make_vec_env(env_id, env_type, nenv, seed, gamestate=args.gamestate, reward_scale=args.reward_scale)

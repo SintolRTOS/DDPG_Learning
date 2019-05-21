@@ -13,7 +13,7 @@ NOISE_TYPE_NORMAL = '--noise_type=normal_0.1 --play'
 NOISE_TYPE_OU = '--noise_type=ou_0.1 --play'
 NOISE_TYPE_ADAPTIVE = '--noise_type=adaptive-param_0.2,normal_0.1 --play'
 
-DDPG_RUN_STR = '--alg=ddpg --env=Pendulum-v0 --num_timesteps=0 '
+DDPG_RUN_STR = '--alg=ddpg --env=wordgame --num_timesteps=1e6 '
 
 def main():
     print('smoke main funtion')
