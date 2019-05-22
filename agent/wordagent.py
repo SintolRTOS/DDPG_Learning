@@ -8,11 +8,14 @@ Created on Tue May 21 16:04:40 2019
 import sys 
 sys.path.append("..") 
 
+from collections import OrderedDict
 import numpy as np
 np.set_printoptions(suppress=True)
 from openpyxl import load_workbook
 import logger
 from .box import Box
+from .dict import Dict
+from gym.utils import seeding
 
 POPULARITY_BOUND = 1000000
 
@@ -27,6 +30,7 @@ class WordAgent(object):
         self.mode = mode
         self.parameter_size = 5
         self.result = []
+        self.all_words = 5
         self.result_keywords = []
         self.select_index = 0;
         self.select_count = 0;
@@ -34,6 +38,9 @@ class WordAgent(object):
         self.select_total = 0
         self.select_total_reward = 0.
         self.max_action = 1.
+        self.reward_range = (-float('inf'),float('inf'))
+        self.metadata = {'render.modes':[]}
+        self.spec = None
         self.openExcel()
         self.reset()
         
@@ -63,16 +70,50 @@ class WordAgent(object):
         logger.debug("totole data row: " + str(len(self.data)))
         logger.debug("all form data: ")
         logger.debug(self.data)
+    
+    def print_result(self):
+        logger.info('----------------print_result------------------')
+        renderdic = {}
+        renderdic['select_total_reward'] = self.select_total_reward
+        renderdic['result_idlist'] = self.result
+        renderdic['result_keywords'] = self.get_result_keywords()
+        logger.info('')
+        logger.info(str(renderdic))
+        logger.info('')
+        logger.info('----------------print_result--------------')
         
     def reset(self):
+        self.print_result()
         self.init_observation()
         self.init_action_space()
         self.reward = 0.
+        self.select_count = 0;
+        self.select_index = 0
         self.select_total_reward = 0.
         self.state = np.array([self.reward,self.select_total_reward])
         self.result.clear()
         self.result_keywords.clear()
-        return self.observation
+#        self.buf_obs[None][0] = self.observation.copy()
+        return self.observation.copy()
+    
+    def seed(self,seed=None):
+        self.np_random,seed = seeding.np_random(seed)
+    
+    def copy_obs_dict(self,obs):
+        """
+        Deep-copy an observation dict.
+        """
+        return {k: np.copy(v) for k, v in obs.items()}
+
+
+    def dict_to_obs(self,obs_dict):
+        """
+        Convert an observation dict into a raw array if the
+        original observation space was not a Dict space.
+        """
+        if set(obs_dict.keys()) == {None}:
+            return obs_dict[None]
+        return obs_dict
     
     def init_observation(self):
         logger.debug('observation-------------------------')
@@ -203,12 +244,15 @@ class WordAgent(object):
         logger.debug('normal_check_transform_3:' + str(normal_check_transform_3))
         logger.debug('end_observation-------------------------')
         self.observation_space = Box(low = -self.observation,high = self.observation,dtype = np.float32)
+#        self.keys, shapes, dtypes = self.obs_space_info(self.observation_space)
+#        self.buf_obs = { k: np.zeros((1,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys }
+#        self.buf_obs[None][0] = self.observation
         logger.debug('self.observation_space:')
         logger.debug(str(self.observation_space))
         return self.observation
     
     def get_observation(self):
-        return self.observation
+        return self.observation.copy()
     
     def init_action_space(self):
         self.max_action = 1.
@@ -221,7 +265,7 @@ class WordAgent(object):
         return self.action_space
     
     def get_result_keywords(self):
-        logger.info('--------------get_result_keywords----------------')
+        logger.debug('--------------get_result_keywords----------------')
         self.result_keywords.clear()
         count = len(self.result)
         self.result.sort()
@@ -236,6 +280,7 @@ class WordAgent(object):
         
         logger.debug('result keywords: ' + str(self.result_keywords))
         logger.debug('--------------end get_result_keywords----------------')
+        return self.result_keywords
     
     def step(self,u):
         logger.debug('wordAgent select: ' + str(u))
@@ -245,10 +290,10 @@ class WordAgent(object):
         index = int(pervalue * float(self.keywords_length - 1))
         logger.debug('--------------step----------------')
         logger.debug('wordAgent select index: ' + str(index))
-        
         logger.debug('step self.observation index: ' + str(index))
+        self.select_index = index;
         popularity = self.observation[index*self.parameter_size]
-        logger.info('step popularity: ' + str(popularity))
+        logger.debug('step popularity: ' + str(popularity))
         conversion = self.observation[index*self.parameter_size + 1]
         transform_1 = self.observation[index*self.parameter_size + 2]
         transform_2 = self.observation[index*self.parameter_size + 3]
@@ -274,23 +319,54 @@ class WordAgent(object):
         logger.debug('----------------step end---------------- ')
         self.state[0] = self.reward
         self.state[1] = self.select_total_reward
-        return self.get_observation().copy(),self.reward,False,{}
+        self.select_count += 1
+        done = False
+        if self.select_count >= self.all_words:
+            done = True
+#        self.buf_obs[None][0] = self.observation.copy()
+        return self.observation.copy(),self.reward,done,{}
     
-    def render(self):
-        logger.info('------------------------------------------')
+    def render(self,mode = 'human'):
+         
+#        logger.info('------------------------------------------')
         renderdic = {}
         renderdic['current_reward'] = self.reward
         renderdic['select_total_reward'] = self.select_total_reward
         renderdic['result_idlist'] = self.result
         renderdic['result_keywords'] = self.get_result_keywords()
-        logger.info('')
-        logger.info(str(renderdic))
-        logger.info('')
-        logger.info('------------------------------------------')
-        logger.info('')
+        renderdic['select_index'] =  self.select_index
+#        logger.info('')
+#        logger.info(str(renderdic))
+#        logger.info('')
+#        logger.info('------------------------------------------')
+    
     
     def get_state(self):
         return self.state
+    
+    def obs_space_info(self,obs_space):
+        """
+        Get dict-structured information about a gym.Space.
+
+        Returns:
+            A tuple (keys, shapes, dtypes):
+                keys: a list of dict keys.
+                shapes: a dict mapping keys to shapes.
+                dtypes: a dict mapping keys to dtypes.
+                """
+        if isinstance(obs_space, Dict):
+            assert isinstance(obs_space.spaces, OrderedDict)
+            subspaces = obs_space.spaces
+        else:
+            subspaces = {None: obs_space}
+        keys = []
+        shapes = {}
+        dtypes = {}
+        for key, box in subspaces.items():
+            keys.append(key)
+            shapes[key] = box.shape
+            dtypes[key] = box.dtype
+        return keys, shapes, dtypes
 
 #logger.debug('test openpyxl sucessful!')
 #agent = WordAgent('../assert/keyword.xlsx','xlsx')

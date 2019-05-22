@@ -301,7 +301,7 @@ class Logger(object):
     def __init__(self, dir, output_formats, comm=None):
         self.name2val = defaultdict(float)  # values this iteration
         self.name2cnt = defaultdict(int)
-        self.level = DEBUG
+        self.level = INFO
         self.dir = dir
         self.output_formats = output_formats
         self.comm = comm
@@ -376,8 +376,8 @@ def configure(dir=None, format_strs=None, comm=None, log_suffix=''):
     if dir is None:
         dir = os.getenv('OPENAI_LOGDIR')
     if dir is None:
-        dir = osp.join(tempfile.gettempdir(),
-            datetime.datetime.now().strftime("openai-%Y-%m-%d-%H-%M-%S-%f"))
+        dir = osp.join('./logs/',
+            datetime.datetime.now().strftime("sintolrtos-%Y-%m-%d-%H-%M-%S-%f"))
     assert isinstance(dir, str)
     os.makedirs(dir, exist_ok=True)
 

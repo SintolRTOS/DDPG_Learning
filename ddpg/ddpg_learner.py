@@ -9,6 +9,9 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.contrib as tc
 
+import functools
+from common.tf_util import save_variables, load_variables
+
 import logger
 from common.mpi_adam import MpiAdam
 import common.tf_util as U
@@ -149,6 +152,7 @@ class DDPG(object):
         self.setup_target_network_updates()
 
         self.initial_state = None # recurrent architectures not supported yet
+        
 
     def setup_target_network_updates(self):
         actor_init_updates, actor_soft_updates = get_target_updates(self.actor.vars, self.target_actor.vars, self.tau)
@@ -340,6 +344,8 @@ class DDPG(object):
         self.actor_optimizer.sync()
         self.critic_optimizer.sync()
         self.sess.run(self.target_init_updates)
+        self.save = functools.partial(save_variables, sess=self.sess)
+        self.load = functools.partial(load_variables, sess=self.sess)
 
     def update_target_net(self):
         self.sess.run(self.target_soft_updates)

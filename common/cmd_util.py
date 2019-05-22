@@ -14,6 +14,7 @@ sys.path.append("..")
 
 import gym
 from gym.wrappers import FlattenDictWrapper
+from agent.wordagent import WordAgent
 import logger
 from bench import Monitor
 from common import set_global_seeds
@@ -81,6 +82,8 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         import retro
         gamestate = gamestate or retro.State.DEFAULT
         env = retro_wrappers.make_retro(game=env_id, max_episode_steps=10000, use_restricted_actions=retro.Actions.DISCRETE, state=gamestate)
+    elif env_id == 'wordgame':
+        env = WordAgent('assert/keyword.xlsx','xlsx')
     else:
         env = gym.make(env_id, **env_kwargs)
 

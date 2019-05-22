@@ -142,7 +142,8 @@ def learn(network, env,
                 # Execute next action.
                 if rank == 0 and render:
                     env.render()
-
+                    
+#                logger.info('action:' + str(action))
                 # max_action is of dimension A, whereas action is dimension (nenvs, A) - the multiplication gets broadcasted to the batch
                 new_obs, r, done, info = env.step(max_action * action)  # scale for execution in env (as far as DDPG is concerned, every action is in [-1, 1])
                 # note these outputs are batched from vecenv
@@ -198,6 +199,7 @@ def learn(network, env,
                 eval_episode_reward = np.zeros(nenvs_eval, dtype = np.float32)
                 for t_rollout in range(nb_eval_steps):
                     eval_action, eval_q, _, _ = agent.step(eval_obs, apply_noise=False, compute_Q=True)
+                    logger.info('eval_action:' + str(eval_action))
                     eval_obs, eval_r, eval_done, eval_info = eval_env.step(max_action * eval_action)  # scale for execution in env (as far as DDPG is concerned, every action is in [-1, 1])
                     if render_eval:
                         eval_env.render()
