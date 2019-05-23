@@ -15,9 +15,12 @@ from openpyxl import load_workbook
 import logger
 from .box import Box
 from .dict import Dict
+from .rank import KeyWordRank
 from gym.utils import seeding
 
 POPULARITY_BOUND = 1000000
+
+rank = KeyWordRank()
 
 
 class WordAgent(object):
@@ -30,7 +33,7 @@ class WordAgent(object):
         self.mode = mode
         self.parameter_size = 5
         self.result = []
-        self.all_words = 5
+        self.all_words = 10
         self.result_keywords = []
         self.select_index = 0;
         self.select_count = 0;
@@ -72,15 +75,23 @@ class WordAgent(object):
         logger.debug(self.data)
     
     def print_result(self):
+        keyword = self.get_result_keywords()
+        rank.checkrank(self.select_total_reward,keyword)
         logger.info('----------------print_result------------------')
         renderdic = {}
-        renderdic['select_total_reward'] = self.select_total_reward
-        renderdic['result_idlist'] = self.result
-        renderdic['result_keywords'] = self.get_result_keywords()
-        logger.info('')
+        renderdic['select_total_reward：'] = self.select_total_reward
+        renderdic['result_idlist：'] = self.result
+        renderdic['result_keywords：'] = keyword
         logger.info(str(renderdic))
-        logger.info('')
-        logger.info('----------------print_result--------------')
+        logger.info('----------------print_result------------------')
+        
+        logger.info('----------------print_rank--------------------')
+        logger.info('current rank value: ')
+        logger.info(rank.rank_value)
+        logger.info('current rank words: ')
+        for n in range(len(rank.rank_list)):
+            logger.info(rank.rank_list[n])
+        logger.info('----------------print_rank--------------------')
         
     def reset(self):
         self.print_result()
@@ -305,6 +316,7 @@ class WordAgent(object):
         self.reward = popularity*conversion + popularity*transform_1*2 + popularity*transform_2 + popularity*transform_3
         if popularity == -1.:
             self.reward = -1
+        self.reward *= 10
         logger.debug('wordAgent self.reward: ' + str(self.reward))
         self.result.append(int(keywords_id))
         self.select_total_reward += self.reward

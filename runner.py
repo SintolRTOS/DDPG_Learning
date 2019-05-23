@@ -250,7 +250,7 @@ class runner_imp(object):
                 env.render()
                 done = done.any() if isinstance(done, np.ndarray) else done
                 if done:
-                    print('episode_rew={}'.format(episode_rew))
+                    logger.info('episode_rew={}'.format(episode_rew))
                     episode_rew = 0
                     obs = env.reset()
 
