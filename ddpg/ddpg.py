@@ -46,6 +46,7 @@ def learn(network, env,
           tau=0.01,
           eval_env=None,
           param_noise_adaption_interval=50,
+          load_path=None,
           **network_kwargs):
 
     set_global_seeds(seed)
@@ -97,12 +98,16 @@ def learn(network, env,
         reward_scale=reward_scale)
     logger.info('Using agent with the following configuration:')
     logger.info(str(agent.__dict__.items()))
+    
 
     eval_episode_rewards_history = deque(maxlen=100)
     episode_rewards_history = deque(maxlen=100)
     sess = U.get_session()
     # Prepare everything.
     agent.initialize(sess)
+    if load_path is not None and os.path.exists(load_path):
+        agent.load(load_path)
+        
     sess.graph.finalize()
 
     agent.reset()
