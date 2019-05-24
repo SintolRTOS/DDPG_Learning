@@ -33,7 +33,7 @@ class WordAgent(object):
         self.mode = mode
         self.parameter_size = 5
         self.result = []
-        self.all_words = 10
+        self.all_words = 20
         self.result_keywords = []
         self.select_index = 0;
         self.select_count = 0;
@@ -75,6 +75,8 @@ class WordAgent(object):
         logger.debug(self.data)
     
     def print_result(self):
+        if len(self.result) == 0:
+            return
         keyword = self.get_result_keywords()
         rank.checkrank(self.select_total_reward,keyword)
         logger.info('----------------print_result------------------')
