@@ -8,16 +8,16 @@ Created on Mon May 20 19:15:06 2019
 from  runner import runner_imp
 
 
-NOISE_TYPE_POPART = '--normalize_returns=True --popart=True --play'
-NOISE_TYPE_NORMAL = '--noise_type=normal_0.1 --play'
-NOISE_TYPE_OU = '--noise_type=ou_0.1--play'
-NOISE_TYPE_ADAPTIVE = '--noise_type=adaptive-param_0.2,normal_0.1 --play'
-NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.4 --play'
+NOISE_TYPE_POPART = '--normalize_returns=True --popart=True'
+NOISE_TYPE_NORMAL = '--noise_type=normal_0.1'
+NOISE_TYPE_OU = '--noise_type=ou_0.1'
+NOISE_TYPE_ADAPTIVE = '--noise_type=adaptive-param_0.2,normal_0.1'
+NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.2,normal_0.1'
 
-DDPG_RUN_STR = '--alg=ddpg --env=wordgame --num_timesteps=1e8 --save_path=./models/wordgame '
-DDPG_RUN_STR2 = '--alg=ddpg --env=Pendulum-v0 --num_timesteps=1e6 --save_path=./models/Pendulum '
-DDPG_RUN_STR3 = '--alg=ddpg --env=wordgame --num_timesteps=1e8 --save_path=./models/wordgame_0524 --load_path=./models/wordgame_0524 '
-DDPG_RUN_STR4 = '--alg=ppo2 --env=PongNoFrameskip-v4 --num_timesteps=0 --load_path=~/models/pong_20M_ppo2 --play '
+DDPG_RUN_STR = '--alg=ddpg --env=wordgame --num_timesteps=1e6 --save_path=./models/wordgame --play'
+DDPG_RUN_STR2 = '--alg=ddpg --env=Pendulum-v0 --num_timesteps=1e6  --save_path=./models/Pendulum_0527 --load_path=./models/Pendulum_05247 --play '
+DDPG_RUN_STR3 = '--alg=ddpg --env=wordgame --num_timesteps=1e6 --save_path=./models/wordgame_0527 --load_path=./models/wordgame_0527 --play '
+DDPG_RUN_STR4 = '--alg=ppo2 --env=Pendulum-v0 --num_timesteps=0 --load_path=~/models/pong_20M_ppo2 --play '
 
 def main():
     print('smoke main funtion')

@@ -212,14 +212,19 @@ class runner_imp(object):
         arg_parser = common_arg_parser()
         args, unknown_args = arg_parser.parse_known_args(args)
         extra_args = self.parse_cmdline_kwargs(unknown_args)
-
+        
+        log_file = None
+        if args.log_file is None:
+            log_file = args.log_file
+        
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
             rank = 0
-            logger.configure()
+            logger.configure(dir = log_file)
         else:
-            logger.configure(format_strs=[])
+            logger.configure(dir = log_file,format_strs=[])
             rank = MPI.COMM_WORLD.Get_rank()
-            
+        
+        
         print('runner args: ',args,' extra_args: ',extra_args)
         model, env = self.train(args, extra_args)
     
@@ -258,4 +263,7 @@ class runner_imp(object):
 
         return model
     
-    
+
+if __name__ == '__main__':
+    runner  = runner_imp()
+    runner.run(sys.argv)

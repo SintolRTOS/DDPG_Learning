@@ -70,32 +70,35 @@ def build_impala_cnn(unscaled_images, depths=[16,32,32], **conv_kwargs):
 
     return out
 
-
+#构建mlp(Multi-Layer Perception)多层感知器，是一种前向结构的人工神经网络
 @register("mlp")
 def mlp(num_layers=2, num_hidden=64, activation=tf.tanh, layer_norm=False):
     """
-    Stack of fully-connected layers to be used in a policy / q-function approximator
+    在策略/ q函数逼近器中使用的全连接层的堆栈
 
-    Parameters:
+    参数说明:
     ----------
 
-    num_layers: int                 number of fully-connected layers (default: 2)
+    num_layers: int                 全连通层数 (default: 2)
 
-    num_hidden: int                 size of fully-connected layers (default: 64)
+    num_hidden: int                 全连通层的尺寸 (default: 64)
 
-    activation:                     activation function (default: tf.tanh)
+    activation:                     激活函数 (default: tf.tanh)
 
     Returns:
     -------
 
-    function that builds fully connected network with a given input tensor / placeholder
+    该函数使用给定的输入张量/占位符构建完全连接的网络
     """
     def network_fn(X):
+        #对张量进行扁平化
         h = tf.layers.flatten(X)
         for i in range(num_layers):
+            #构建连接层
             h = fc(h, 'mlp_fc{}'.format(i), nh=num_hidden, init_scale=np.sqrt(2))
             if layer_norm:
                 h = tf.contrib.layers.layer_norm(h, center=True, scale=True)
+            #构建激活函数
             h = activation(h)
 
         return h
