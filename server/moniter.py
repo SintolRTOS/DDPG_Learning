@@ -101,7 +101,7 @@ class MoniterProcess(threading.Thread):
             self.is_get_per_process = False
             self.key_words_list.clear()
             if os.path.exists(log_file):
-                logger.info('open log_file:' + str(log_file))
+#                logger.info('open log_file:' + str(log_file))
                 self.read_file = open(log_file, 'rb')
             else:
                 continue
