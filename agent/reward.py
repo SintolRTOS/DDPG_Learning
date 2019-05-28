@@ -34,12 +34,12 @@ def get_reward_value(observation,parameter_size,index,reward_type):
         transform_1 = observation[index*parameter_size + 2]
         transform_2 = observation[index*parameter_size + 3]
         transform_3 = observation[index*parameter_size + 4]
-        reward = popularity*conversion + popularity*transform_1*10 + popularity*transform_2 + popularity*transform_3
+        reward = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
     else:
         popularity = observation[index*parameter_size]
         conversion = observation[index*parameter_size + 1]
         transform_1 = observation[index*parameter_size + 2]
         transform_2 = observation[index*parameter_size + 3]
         transform_3 = observation[index*parameter_size + 4]
-        reward = popularity*conversion + popularity*transform_1*10 + popularity*transform_2 + popularity*transform_3
+        reward = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
     return reward

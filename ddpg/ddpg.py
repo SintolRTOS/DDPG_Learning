@@ -176,6 +176,8 @@ def learn(network, env,
                         episode_reward[d] = 0.
                         episode_step[d] = 0
                         epoch_episodes += 1
+                        logger.info(str(epoch_episodes / (total_timesteps * 2)))
+                        logger.info('pervalue')
                         episodes += 1
                         if nenvs == 1:
                             agent.reset()
@@ -243,6 +245,9 @@ def learn(network, env,
         combined_stats['total/episodes'] = episodes
         combined_stats['rollout/episodes'] = epoch_episodes
         combined_stats['rollout/actions_std'] = np.std(epoch_actions)
+        
+        logger.info(str(epoch_episodes / (total_timesteps * 2)))
+        logger.info('pervalue')
         # Evaluation statistics.
         if eval_env is not None:
             combined_stats['eval/return'] = eval_episode_rewards

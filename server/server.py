@@ -29,10 +29,10 @@ from enum import Enum
 class ActionType(Enum):
     #启动操作进程
     START_ACTION_PROCESS = 1
-    #关闭操作进程
-    END_ACTION_PROCESS = 2
     #查询进程结果
-    QUERY_ACTION_PROCESS = 3
+    QUERY_ACTION_PROCESS = 2
+    #关闭操作进程
+    END_ACTION_PROCESS = 3
 
 class DDPG_Server(http.server.BaseHTTPRequestHandler):    
     
@@ -49,9 +49,9 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
             json_objects = json.loads(str(data))
             logger.info('_post_handler:')
             logger.info(json_objects)
-            starttime = time.time()
+#            starttime = time.time()
             localtime = time.localtime()
-            logdir = 'sintolrtos_' + str(starttime)
+#            logdir = 'sintolrtos_' + str(starttime)
             ret_code = 0
             id = json_objects['id']
             action_id = json_objects['action_id']
@@ -60,15 +60,21 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
             action_ret = self.handler(action_id,json_objects,reward_type)
             if action_ret['retcode'] == -1:
                 ret_code = -1
+                
+            current_process_id = PROCESS_ID
+            if action_id == int(ActionType.START_ACTION_PROCESS.value):
+                current_process_id = PROCESS_ID
+            else:
+                current_process_id = json_objects['process_id']
             json_ret = {
                     'id' : id,
                     'action_id' : action_id,
                     'retinfo' : action_ret['retinfo'],
                     'retcode' : ret_code,
-                    'process_id' : PROCESS_ID,
+                    'process_id' : current_process_id,
                     'reward_type' : reward_type,
                     'actiontime': str(time.strftime("%Y-%m-%d %H:%M:%S",localtime)),
-                    'logdir' : logdir,
+#                    'logdir' : logdir,
                     'num_timesteps' : num_timesteps
                     }
         except Exception as e:
@@ -77,11 +83,10 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
                     'retcode' : 1,
                     'errormsg' : str(e)
                     }
-        PROCESS_ID += 1
         return json.dumps(json_ret)
     
     
-    def handler(self,action_id,json_data,reward_type = None,process_id = None):
+    def handler(self,action_id,json_data,reward_type = None):
         
         global PROCESS_ID
         action_ret = {}
@@ -89,14 +94,17 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
         action_ret['retinfo'] = None
         if action_id == int(ActionType.START_ACTION_PROCESS.value):
             assert_file = json_data['assert_file']
+            PROCESS_ID += 1
             if moniterimp.run_process(PROCESS_ID,reward_type,assert_file=assert_file) == False:
                 action_ret['retcode'] = -1
         elif action_id == int(ActionType.QUERY_ACTION_PROCESS.value):
+            process_id = json_data['process_id']
             retinfo = moniterimp.get_process(process_id)
             if retinfo is None:
                 action_ret['retcode'] = -1
             action_ret['retinfo'] = retinfo
         elif action_id == int(ActionType.END_ACTION_PROCESS.value):
+            process_id = json_data['process_id']
             retinfo = moniterimp.end_process(process_id)
             if retinfo is None:
                 action_ret['retcode'] = -1

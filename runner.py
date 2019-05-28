@@ -260,6 +260,8 @@ class runner_imp(object):
                     actions, _, _, _ = model.step(obs)
                 obs, rew, done, _ = env.step(actions)
                 step += 1
+                logger.info(str(0.5 + step / (1000000 * 2)))
+                logger.info('pervalue')
                 episode_rew += rew[0] if isinstance(env, VecEnv) else rew
                 env.render()
                 done = done.any() if isinstance(done, np.ndarray) else done

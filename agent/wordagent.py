@@ -90,13 +90,13 @@ class WordAgent(object):
         logger.info(str(renderdic))
         logger.info('----------------print_result------------------')
         
-        logger.info('----------------print_rank--------------------')
-        logger.info('current rank value: ')
+        logger.info('print_rank_start')
         logger.info(rank.rank_value)
-        logger.info('current rank words: ')
+        logger.info('current rank value: ')
         for n in range(len(rank.rank_list)):
             logger.info(rank.rank_list[n])
-        logger.info('----------------print_rank--------------------')
+        logger.info('current rank words: ')
+        logger.info('print_rank_end')
         
     def reset(self):
         self.print_result()

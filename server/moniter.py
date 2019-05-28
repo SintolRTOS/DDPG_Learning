@@ -11,6 +11,7 @@ sys.path.append("..")
 
 import logger
 
+import _thread
 import threading
 import datetime
 import time
@@ -38,7 +39,6 @@ class MoniterProcess(threading.Thread):
         self.model_file = model_file
         self.run_process = 0.
         self.key_words_list = []
-        self.rank_reward_list = []
         self.assert_file = assert_file
         self.iscompleted = False
         self.isstarted = False
@@ -53,7 +53,7 @@ class MoniterProcess(threading.Thread):
         return self.process_id
     
     def get_current_process_info(self):
-        return self.rank_reward_list,self.key_words_list,self.iscompleted,self.isstarted,self.run_process,self.os_id
+        return self.key_words_list,self.iscompleted,self.isstarted,self.run_process,self.os_id
     
     def start_run_process(self):
         if self.isstarted == True:
@@ -70,6 +70,7 @@ class MoniterProcess(threading.Thread):
         argstr = 'python ../runner.py ' + RUN_STR
         logger.info('start_run_process: ')
         logger.info(argstr)
+        _thread.start_new_thread( self.listener_log_info, (self.log_file,) )
         self.p = subprocess.run(argstr.split(' '))
 #        self.os_id = self.p.pid
 #        while True:
@@ -79,7 +80,85 @@ class MoniterProcess(threading.Thread):
 #        self.p.wait()
         logger.info('complete_run_process:' + str(self.p))   
         self.iscompleted = True
-        
+    
+    
+    def listener_log_info(self,log_file):
+        log_file += '/log.txt'
+        logger.info('start_listener_log_info: ' + str(log_file))
+        self.read_file = None
+        self.pos = 0
+        self.rank_end = False
+        self.rank_start = False
+        self.is_getrank = False
+        self.is_get_per_process = False;
+        while True:
+            time.sleep(10)
+            self.read_file = None
+            self.pos = 0
+            self.rank_end = False
+            self.rank_start = False
+            self.is_getrank = False
+            self.is_get_per_process = False
+            self.key_words_list.clear()
+            if os.path.exists(log_file):
+                logger.info('open log_file:' + str(log_file))
+                self.read_file = open(log_file, 'rb')
+            else:
+                continue
+                
+            self.pos = 0
+            while True:
+                line_str = self.lastline()
+#                logger.info('line_str:' + str(line_str))
+                if line_str == False:
+                    break
+                
+                if self.is_get_per_process == False and line_str == 'pervalue':
+                    self.is_get_per_process = True
+                    continue
+                
+                if self.is_get_per_process == True:
+                    self.is_get_per_process = False
+                    self.run_process = line_str
+                    logger.info('current run_process:' + str(self.run_process))
+                
+                if line_str == 'print_rank_end' and not self.is_getrank:
+                    self.rank_end = not self.rank_end
+                    continue
+                if line_str == 'print_rank_start' and self.rank_end and not self.is_getrank:
+                    self.rank_start = True
+                    
+                if self.rank_end and not self.rank_start and not self.is_getrank:
+                    self.key_words_list.append(line_str)
+                    
+                if not self.is_getrank and self.rank_start:
+                    self.is_getrank = True
+                    logger.info('current log listenr keywordslist:')
+                    logger.info(str(self.key_words_list))
+                    self.read_file.close()
+                    break
+         
+    def lastline(self):
+        while True:
+            self.pos = self.pos - 1
+            try:
+#                logger.info('seek pos:' + str(self.pos))
+                self.read_file.seek(self.pos, 2)  #从文件末尾开始读
+                w = self.read_file.read(1)
+#                logger.info('seek w:' + str(w)) 
+                if w == '\n'.encode():
+                    break
+            except:     #到达文件第一行，直接读取，退出
+                self.read_file.seek(0, 0)        
+                logger.error('log error:' + str(self.read_file.readline().strip()))
+                return False
+            
+        last_str = self.read_file.readline().strip()
+#        logger.info('last_str:' + str(last_str))
+        return last_str.decode('gbk')
+
+            
+            
 
 
 
@@ -111,9 +190,8 @@ class Moniter(object):
     
     def get_process(self,process_id):
         if self.processdic.__contains__(process_id):
-            rank_reward_list, key_words_list,iscompleted,isstarted,run_process,os_id = self.processdic[process_id].get_current_process_info()
+            key_words_list,iscompleted,isstarted,run_process,os_id = self.processdic[process_id].get_current_process_info()
             retinfo = {}
-            retinfo['rank_reward_list'] = rank_reward_list
             retinfo['key_words_list'] = key_words_list
             retinfo['iscompleted'] = iscompleted
             retinfo['isstarted'] = isstarted
