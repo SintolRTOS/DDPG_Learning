@@ -53,6 +53,7 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
             localtime = time.localtime()
             logdir = 'sintolrtos_' + str(starttime)
             ret_code = 0
+            id = json_objects['id']
             action_id = json_objects['action_id']
             num_timesteps = json_objects['num_timesteps']
             reward_type = json_objects['reward_type']
@@ -60,6 +61,7 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
             if action_ret['retcode'] == -1:
                 ret_code = -1
             json_ret = {
+                    'id' : id,
                     'action_id' : action_id,
                     'retinfo' : action_ret['retinfo'],
                     'retcode' : ret_code,
@@ -86,7 +88,8 @@ class DDPG_Server(http.server.BaseHTTPRequestHandler):
         action_ret['retcode'] = 0
         action_ret['retinfo'] = None
         if action_id == int(ActionType.START_ACTION_PROCESS.value):
-            if moniterimp.run_process(PROCESS_ID,reward_type) == False:
+            assert_file = json_data['assert_file']
+            if moniterimp.run_process(PROCESS_ID,reward_type,assert_file=assert_file) == False:
                 action_ret['retcode'] = -1
         elif action_id == int(ActionType.QUERY_ACTION_PROCESS.value):
             retinfo = moniterimp.get_process(process_id)

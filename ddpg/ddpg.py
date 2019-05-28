@@ -97,6 +97,7 @@ def learn(network, env,
         actor_lr=actor_lr, critic_lr=critic_lr, enable_popart=popart, clip_norm=clip_norm,
         reward_scale=reward_scale)
     logger.info('Using agent with the following configuration:')
+    logger.info('Using agent:' + str(agent))
     logger.info(str(agent.__dict__.items()))
     
 

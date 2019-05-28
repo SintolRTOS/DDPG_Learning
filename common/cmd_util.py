@@ -32,7 +32,9 @@ def make_vec_env(env_id, env_type, num_env, seed,
                  flatten_dict_observations=True,
                  gamestate=None,
                  initializer=None,
-                 force_dummy=False):
+                 force_dummy=False,
+                 assert_file=None,
+                 reward_type=0):
     """
     Create a wrapped, monitored SubprocVecEnv for Atari and MuJoCo.
     """
@@ -54,7 +56,9 @@ def make_vec_env(env_id, env_type, num_env, seed,
             wrapper_kwargs=wrapper_kwargs,
             env_kwargs=env_kwargs,
             logger_dir=logger_dir,
-            initializer=initializer
+            initializer=initializer,
+            assert_file=assert_file,
+            reward_type=reward_type
         )
 
     set_global_seeds(seed)
@@ -64,7 +68,7 @@ def make_vec_env(env_id, env_type, num_env, seed,
         return DummyVecEnv([make_thunk(i + start_index, initializer=None) for i in range(num_env)])
 
 
-def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.0, gamestate=None, flatten_dict_observations=True, wrapper_kwargs=None, env_kwargs=None, logger_dir=None, initializer=None):
+def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.0, gamestate=None, flatten_dict_observations=True, wrapper_kwargs=None, env_kwargs=None, logger_dir=None, initializer=None,assert_file=None,reward_type=0):
     if initializer is not None:
         initializer(mpi_rank=mpi_rank, subrank=subrank)
 
@@ -83,7 +87,10 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         gamestate = gamestate or retro.State.DEFAULT
         env = retro_wrappers.make_retro(game=env_id, max_episode_steps=10000, use_restricted_actions=retro.Actions.DISCRETE, state=gamestate)
     elif env_id == 'wordgame':
-        env = WordAgent('assert/keyword.xlsx','xlsx')
+        excelfile = '../assert/keyword.xlsx'
+        if assert_file is not None:
+            excelfile = assert_file
+        env = WordAgent(excelfile,'xlsx',reward_type)
     else:
         env = gym.make(env_id, **env_kwargs)
 
@@ -172,6 +179,8 @@ def common_arg_parser():
     parser.add_argument('--num_timesteps', type=float, default=1e6),
     parser.add_argument('--network', help='network type (mlp, cnn, lstm, cnn_lstm, conv_only)', default=None)
     parser.add_argument('--log_file', help='log init dir path', default=None)
+    parser.add_argument('--assert_file', help='assert_file dir path,its for learning data', default=None)
+    parser.add_argument('--reward_type', help='reward_type is for define reward funtion', default=None)
     parser.add_argument('--gamestate', help='game state to load (so far only used in retro games)', default=None)
     parser.add_argument('--num_env', help='Number of environment copies being run in parallel. When not specified, set to number of cpus for Atari, and to 1 for Mujoco', default=None, type=int)
     parser.add_argument('--reward_scale', help='Reward scale factor. Default: 1.0', default=1.0, type=float)

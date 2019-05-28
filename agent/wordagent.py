@@ -17,6 +17,7 @@ from .box import Box
 from .dict import Dict
 from .rank import KeyWordRank
 from gym.utils import seeding
+import agent.reward
 
 POPULARITY_BOUND = 1000000
 
@@ -27,7 +28,8 @@ class WordAgent(object):
     """docstring for ClassName"""
     def __init__(self,
                  filepath,
-                 mode):
+                 mode,
+                 reward_type):
         super(WordAgent,self).__init__()
         self.filepath = filepath
         self.mode = mode
@@ -44,6 +46,7 @@ class WordAgent(object):
         self.reward_range = (-float('inf'),float('inf'))
         self.metadata = {'render.modes':[]}
         self.spec = None
+        self.reward_type = reward_type;
         self.openExcel()
         self.reset()
         
@@ -307,15 +310,15 @@ class WordAgent(object):
         self.select_index = index;
         popularity = self.observation[index*self.parameter_size]
         logger.debug('step popularity: ' + str(popularity))
-        conversion = self.observation[index*self.parameter_size + 1]
-        transform_1 = self.observation[index*self.parameter_size + 2]
-        transform_2 = self.observation[index*self.parameter_size + 3]
-        transform_3 = self.observation[index*self.parameter_size + 4]
+#        conversion = self.observation[index*self.parameter_size + 1]
+#        transform_1 = self.observation[index*self.parameter_size + 2]
+#        transform_2 = self.observation[index*self.parameter_size + 3]
+#        transform_3 = self.observation[index*self.parameter_size + 4]
         keywords_id = index
-        #add mistake error value
-#        self.observation[index*self.parameter_size] = -abs(popularity)
+        self.reward = agent.reward.get_reward_value(self.observation,self.parameter_size,index,self.reward_type)
+        
         self.observation[index*self.parameter_size] = -1.
-        self.reward = popularity*conversion + popularity*transform_1*2 + popularity*transform_2 + popularity*transform_3
+#        self.reward = popularity*conversion + popularity*transform_1*2 + popularity*transform_2 + popularity*transform_3
         if popularity == -1.:
             self.reward = -1
         self.reward *= 10

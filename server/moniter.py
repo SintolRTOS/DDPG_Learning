@@ -10,10 +10,11 @@ import sys
 sys.path.append("..") 
 
 import logger
-from enum import Enum
 
+import threading
 import datetime
 import time
+import os
 
 global NOISE_TYPE_WORD
 NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.2,normal_0.1'
@@ -21,24 +22,15 @@ NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.2,normal_0.1'
 global DDPG_RUN_STR
 DDPG_RUN_STR = '--alg=ddpg --env=wordgame --play '
 
-import subprocess
-
-
-class ProcessType(Enum):
-    #胶原蛋白
-    COLLAGE_HIGHFLOW = 1
-    COLLAGE_HIGHCONVERSION = 2
-    COLLAGE_HIGHROI = 3
-    #牡蛎
-    OYSTER_HIGHFLOW = 4
-    OYSTER_HIGHCONVERSION = 5
-    OYSTER_HIGHROI = 6
-    
+import subprocess    
     
 
-class MoniterProcess(object):
-    def __init__(self,process_id,reward_type,num_timesteps,log_file,model_file):
-        super(MoniterProcess,self).__init__()
+class MoniterProcess(threading.Thread):
+    def __init__(self, threadID, name, counter,process_id,reward_type,num_timesteps,log_file,model_file,assert_file):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
         self.process_id = process_id
         self.reward_type = reward_type
         self.num_timesteps = num_timesteps
@@ -47,9 +39,15 @@ class MoniterProcess(object):
         self.run_process = 0.
         self.key_words_list = []
         self.rank_reward_list = []
+        self.assert_file = assert_file
         self.iscompleted = False
         self.isstarted = False
         self.os_id = 0
+        
+    def run(self):                   #把要执行的代码写到run函数里面 线程在创建后会直接运行run函数 
+        print('Starting thread' + self.name)
+        self.start_run_process()
+        print('Exiting thread' + self.name)
         
     def get_run_process_id(self):
         return self.process_id
@@ -62,22 +60,24 @@ class MoniterProcess(object):
             return False
         self.isstarted = True
         RUN_STR = DDPG_RUN_STR
-        RUN_STR += ('--num_timesteps=' + self.num_timesteps + ' ')
-        RUN_STR += ('--reward_type=' + self.reward_type + ' ')
-        RUN_STR += ('--log_file=' + self.log_file + ' ')
-        RUN_STR += ('--load_path=' + self.model_file + ' ')
-        RUN_STR += ('--save_path=' + self.model_file + ' ')
+        RUN_STR += ('--num_timesteps=' + str(self.num_timesteps) + ' ')
+        RUN_STR += ('--reward_type=' + str(self.reward_type) + ' ')
+        RUN_STR += ('--log_file=' + str(self.log_file) + ' ')
+        RUN_STR += ('--load_path=' + str(self.model_file) + ' ')
+        RUN_STR += ('--save_path=' + str(self.model_file) + ' ')
+        RUN_STR += ('--assert_file=' + str(self.assert_file) + ' ')
         RUN_STR += NOISE_TYPE_WORD
-        argstr = 'python -m DDPG_Learning.runner ' + RUN_STR
+        argstr = 'python ../runner.py ' + RUN_STR
         logger.info('start_run_process: ')
-        logger.info(RUN_STR)
-        self.p = subprocess.Popen(argstr.split(' '),shell=True,stdout=subprocess.PIPE)
-        self.os_id = self.p.pid
-        while True:
-            time.sleep(1000)
-            if self.p.poll() == 0:
-                break
-            
+        logger.info(argstr)
+        self.p = subprocess.run(argstr.split(' '))
+#        self.os_id = self.p.pid
+#        while True:
+#            time.sleep(1)
+#            if self.p.poll() == 0:
+#                break
+#        self.p.wait()
+        logger.info('complete_run_process:' + str(self.p))   
         self.iscompleted = True
         
 
@@ -91,16 +91,26 @@ class Moniter(object):
         
     
     
-    def run_process(self,process_id,reward_type):
-        datatime_form  = datetime.datetime.now().strftime("sintolrtos-%Y-%m-%d-%H-%M-%S-%f")
-        model_file = '../models/wordgame_' + datatime_form
-        log_file = '../logs/log_' + datatime_form
-        moniter_process = MoniterProcess(process_id,reward_type,'1e6',log_file,model_file)
+    def run_process(self,process_id,reward_type,assert_file):
+        if self.processdic.__contains__(process_id):
+            return False
+        
+        datatime_form  = datetime.datetime.now().strftime("wordgame-%Y-%m-%d-%H-%M-%S-%f")
+        model_file = './models/model_' + datatime_form + '_' + str(reward_type) + '_' + str(process_id)
+        log_file = './logs/log_' + datatime_form + '_' + str(reward_type) + '_' + str(process_id)
+        assert_file = '../assert/' + assert_file
+        if os.path.exists(assert_file) == False:
+            logger.info('assert_file is not exists:' + str(assert_file))
+            return False
+        
+        # 创建新线程
+        moniter_process = MoniterProcess(process_id,'moniter_' + str(process_id),reward_type,process_id,reward_type,'1e6',log_file,model_file,assert_file)
         self.processdic[process_id] = moniter_process
-        moniter_process.start_run_process()
+        moniter_process.start()
+        return True
     
     def get_process(self,process_id):
-        if self.processdic.has_key(process_id):
+        if self.processdic.__contains__(process_id):
             rank_reward_list, key_words_list,iscompleted,isstarted,run_process,os_id = self.processdic[process_id].get_current_process_info()
             retinfo = {}
             retinfo['rank_reward_list'] = rank_reward_list

@@ -105,6 +105,13 @@ class runner_imp(object):
         nenv = args.num_env or ncpu
         alg = args.alg
         seed = args.seed
+        assert_file = None
+        if args.assert_file is not None:
+            assert_file = args.assert_file
+        
+        reward_type = 0
+        if args.reward_type is not None:
+            reward_type = args.reward_type
 
         env_type, env_id = self.get_env_type(args)
 
@@ -115,7 +122,7 @@ class runner_imp(object):
                 env = make_env(env_id, env_type, seed=seed)
             else:
                 frame_stack_size = 4
-                env = make_vec_env(env_id, env_type, nenv, seed, gamestate=args.gamestate, reward_scale=args.reward_scale)
+                env = make_vec_env(env_id, env_type, nenv, seed, gamestate=args.gamestate, reward_scale=args.reward_scale,assert_file=assert_file,reward_type=reward_type)
                 env = VecFrameStack(env, frame_stack_size)
 
         else:
@@ -126,7 +133,7 @@ class runner_imp(object):
             get_session(config=config)
 
             flatten_dict_observations = alg not in {'her'}
-            env = make_vec_env(env_id, env_type, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
+            env = make_vec_env(env_id, env_type, args.num_env or 1, seed, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations,assert_file=assert_file,reward_type=reward_type)
 
             if env_type == 'mujoco':
                 env = VecNormalize(env, use_tf=True)
@@ -214,7 +221,7 @@ class runner_imp(object):
         extra_args = self.parse_cmdline_kwargs(unknown_args)
         
         log_file = None
-        if args.log_file is None:
+        if args.log_file is not None:
             log_file = args.log_file
         
         if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
@@ -224,6 +231,7 @@ class runner_imp(object):
             logger.configure(dir = log_file,format_strs=[])
             rank = MPI.COMM_WORLD.Get_rank()
         
+        logger.info('log_file:' + str(log_file))
         
         print('runner args: ',args,' extra_args: ',extra_args)
         model, env = self.train(args, extra_args)
@@ -244,13 +252,14 @@ class runner_imp(object):
             dones = np.zeros((1,))
 
             episode_rew = 0
-            while True:
+            step = 0
+            while step <= 1000000:
                 if state is not None:
                     actions, _, state, _ = model.step(obs,S=state, M=dones)
                 else:
                     actions, _, _, _ = model.step(obs)
-
                 obs, rew, done, _ = env.step(actions)
+                step += 1
                 episode_rew += rew[0] if isinstance(env, VecEnv) else rew
                 env.render()
                 done = done.any() if isinstance(done, np.ndarray) else done
@@ -258,7 +267,6 @@ class runner_imp(object):
                     logger.info('episode_rew={}'.format(episode_rew))
                     episode_rew = 0
                     obs = env.reset()
-
         env.close()
 
         return model
