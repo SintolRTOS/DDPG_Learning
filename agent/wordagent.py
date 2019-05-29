@@ -13,14 +13,19 @@ import numpy as np
 np.set_printoptions(suppress=True)
 from openpyxl import load_workbook
 import logger
-from .box import Box
-from .dict import Dict
-from .rank import KeyWordRank
+from agent.box import Box
+from agent.dict import Dict
+from agent.rank import KeyWordRank
 from gym.utils import seeding
 import agent.reward
 
-POPULARITY_BOUND = 1000000
 
+POPULARITY_BOUND = 1000000
+HIGH_CONVERTION_PARAMS_SIZE = 5
+HIGH_FLOW_PARAMS_SIZE = 3
+HIGH_ROI_PARAMS_SIZE = 3
+HIGH_ROI_CONVERTION_PARAMS_SIZE = 8
+ALL_WORDS_MAX = 20
 rank = KeyWordRank()
 
 
@@ -29,13 +34,21 @@ class WordAgent(object):
     def __init__(self,
                  filepath,
                  mode,
-                 reward_type):
+                 reward_type = agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value):
         super(WordAgent,self).__init__()
         self.filepath = filepath
         self.mode = mode
-        self.parameter_size = 5
+        self.reward_type = reward_type;
+        if self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value:
+            self.parameter_size = HIGH_CONVERTION_PARAMS_SIZE
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHFLOW.value:
+            self.parameter_size = HIGH_FLOW_PARAMS_SIZE
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI.value:
+            self.parameter_size = HIGH_ROI_PARAMS_SIZE
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI_HIGHCONVERSION.value:
+            self.parameter_size = HIGH_ROI_CONVERTION_PARAMS_SIZE
         self.result = []
-        self.all_words = 20
+        self.all_words = ALL_WORDS_MAX
         self.result_keywords = []
         self.select_index = 0;
         self.select_count = 0;
@@ -46,7 +59,6 @@ class WordAgent(object):
         self.reward_range = (-float('inf'),float('inf'))
         self.metadata = {'render.modes':[]}
         self.spec = None
-        self.reward_type = reward_type;
         self.openExcel()
         self.reset()
         
@@ -64,11 +76,11 @@ class WordAgent(object):
         #wish data base
         for row in sheet.iter_rows(min_col=1, min_row=1, max_row=self.max_row, max_col=self.max_column):
             ROW = []
-            if row[4].value == 0:
+            if row[1].value == 0:
                 continue;
-            if row[5].value == 0:
+            if row[2].value == 0:
                 continue;
-            if row[8].value == 0 and row[9].value == 0 and row[10].value == 0:
+            if row[5].value == 0 and row[6].value == 0 and row[7].value == 0:
                 continue;
             for cell in row:
                 ROW.append(cell.value)
@@ -100,7 +112,20 @@ class WordAgent(object):
         
     def reset(self):
         self.print_result()
-        self.init_observation()
+        
+        observation = None
+        if self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value:
+            observation = self.init_observation()
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHFLOW.value:
+            observation = self.init_observation_highflow()
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI.value:
+            observation = self.init_observation_highroi()
+        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI_HIGHCONVERSION.value:
+            observation = self.init_observation_highroi_hightconveration()
+        
+        if observation is False:
+            logger.error('init_observation failed!')
+            return False
         self.init_action_space()
         self.reward = 0.
         self.select_count = 0;
@@ -131,48 +156,449 @@ class WordAgent(object):
             return obs_dict[None]
         return obs_dict
     
-    def init_observation(self):
+    def init_observation_highroi(self):
         logger.debug('observation-------------------------')
 #        self.keywords_length = 10
         self.keywords_length = len(self.data)
+        if self.keywords_length == 0:
+            logger.info('self.keywords_length num is 0')
+            return
         logger.debug('self.keywords_length: '+ str(self.keywords_length))
         self.observation = np.empty(self.keywords_length * self.parameter_size,float)
-        popularity_max = self.data[0][4]
-        popularity_min = self.data[0][4]
-        conversion_max = self.data[0][5]
-        conversion_min = self.data[0][5]
-        transform_1_max = self.data[0][8]
-        transform_1_min = self.data[0][8]
-        transform_2_max = self.data[0][9]
-        transform_2_min = self.data[0][9]
-        transform_3_max = self.data[0][10]
-        transform_3_min = self.data[0][10]
+        buy_num_max = self.data[0][12]
+        buy_num_min = self.data[0][12]
+        money_num_max = self.data[0][14]
+        money_num_min = self.data[0][14]
+        roi_max = self.data[0][15]
+        roi_min = self.data[0][15]
         for i in range(self.keywords_length):
-            self.observation[i*self.parameter_size] = self.data[i][4]
+            self.observation[i*self.parameter_size] = self.data[i][12]
+            if self.observation[i*self.parameter_size] > buy_num_max:
+                buy_num_max = self.observation[i*self.parameter_size]
+            if self.observation[i*self.parameter_size] < buy_num_min:
+                buy_num_min = self.observation[i*self.parameter_size]
+                
+            self.observation[i*self.parameter_size + 1] = self.data[i][14]
+            if self.observation[i*self.parameter_size + 1] > money_num_max:
+                money_num_max = self.observation[i*self.parameter_size + 1]
+            if self.observation[i*self.parameter_size + 1] < money_num_min:
+                money_num_min = self.observation[i*self.parameter_size + 1]
+                
+            self.observation[i*self.parameter_size + 2] = self.data[i][15]
+            if self.observation[i*self.parameter_size + 2] > roi_max:
+                roi_max = self.observation[i*self.parameter_size + 2]
+            if self.observation[i*self.parameter_size + 2] < roi_min:
+                roi_min = self.observation[i*self.parameter_size + 2]
+                
+
+        #normal action
+        normal_check_buy_num = 0.
+        normal_check_money_num = 0.
+        normal_check_roi_num = 0.
+        logger.debug('buy_num_max:' + str(buy_num_max))
+        logger.debug('buy_num_min:' + str(buy_num_min))
+        logger.debug('money_num_max:' + str(money_num_max))
+        logger.debug('money_num_min:' + str(money_num_min))
+        logger.debug('money_num_max:' + str(money_num_max))
+        logger.debug('money_num_min:' + str(money_num_min))
+
+        for j in range(self.keywords_length):
+            self.observation[j*self.parameter_size] = (self.observation[j*self.parameter_size] - buy_num_min) / (buy_num_max - buy_num_min)
+            normal_check_buy_num+=self.observation[j*self.parameter_size]
+            
+            self.observation[j*self.parameter_size + 1] = (self.observation[j*self.parameter_size + 1] - money_num_min) / (money_num_max - money_num_min)
+            normal_check_money_num+=self.observation[j*self.parameter_size + 1]
+            
+            self.observation[j*self.parameter_size + 2] = (self.observation[j*self.parameter_size + 2] - money_num_min) / (money_num_max - money_num_min)
+            normal_check_roi_num+=self.observation[j*self.parameter_size + 2]
+                
+        
+        nomal_check_total = normal_check_buy_num + normal_check_money_num + normal_check_roi_num
+        logger.debug('nomal_check_total:' + str(nomal_check_total))
+        #add mean value
+        normal_check_mean = nomal_check_total / self.observation.shape[0]
+        logger.debug('normal_check_mean:' + str(normal_check_mean))
+        normal_check_max = self.observation[0]
+        normal_check_min = self.observation[0]
+        for n in range(self.observation.shape[0]):
+            self.observation[n] += normal_check_mean
+#            logger.debug('self.observation[n]:' + str(self.observation[n]))
+            if self.observation[n] > normal_check_max:
+                normal_check_max = self.observation[n]
+            if self.observation[n] <= normal_check_min:
+                normal_check_min = self.observation[n]
+        
+        logger.debug('normal_check_max:' + str(normal_check_max))
+        logger.debug('normal_check_min:' + str(normal_check_min))
+        
+        #check normal_action
+        normal_check_last = 0.
+        for x in range(self.observation.shape[0]):
+#            logger.debug('self.observation[n]:' + str(self.observation[x]))
+            self.observation[x] = (self.observation[x] - normal_check_min) / (normal_check_max - normal_check_min)
+#            logger.debug('self.observation[n]_:' + str(self.observation[x]))
+            normal_check_last += self.observation[x]
+        logger.debug('normal_check_last:' + str(normal_check_last))
+                    
+        logger.debug('print total observation--------------------------')
+        for a in range(self.keywords_length):
+            print_data = []
+            print_data.append(self.observation[a*self.parameter_size])
+            print_data.append(self.observation[a*self.parameter_size + 1])
+            print_data.append(self.observation[a*self.parameter_size + 2])
+            logger.debug(str(print_data))
+        logger.debug('end total observation--------------------------')
+                    
+#        logger.debug(str(self.observation))
+        logger.debug('normal_check_buy_num:' + str(normal_check_buy_num))
+        logger.debug('normal_check_money_num:' + str(normal_check_money_num))
+        logger.debug('normal_check_roi_num:' + str(normal_check_roi_num))
+        logger.debug('end_observation-------------------------')
+        self.observation_space = Box(low = -self.observation,high = self.observation,dtype = np.float32)
+#        self.keys, shapes, dtypes = self.obs_space_info(self.observation_space)
+#        self.buf_obs = { k: np.zeros((1,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys }
+#        self.buf_obs[None][0] = self.observation
+        logger.debug('self.observation_space:')
+        logger.debug(str(self.observation_space))
+        return self.observation
+    
+    def init_observation_highflow(self):
+        logger.debug('observation-------------------------')
+#        self.keywords_length = 10
+        self.keywords_length = len(self.data)
+        if self.keywords_length == 0:
+            logger.info('self.keywords_length num is 0')
+            return
+        logger.debug('self.keywords_length: '+ str(self.keywords_length))
+        self.observation = np.empty(self.keywords_length * self.parameter_size,float)
+        popularity_max = self.data[0][1]
+        popularity_min = self.data[0][1]
+        click_num_max = self.data[0][8]
+        click_num_min = self.data[0][8]
+        click_rate_max = self.data[0][9]
+        click_rate_min = self.data[0][9]
+        for i in range(self.keywords_length):
+            self.observation[i*self.parameter_size] = self.data[i][1]
             if self.observation[i*self.parameter_size] > popularity_max:
                 popularity_max = self.observation[i*self.parameter_size]
             if self.observation[i*self.parameter_size] < popularity_min:
                 popularity_min = self.observation[i*self.parameter_size]
                 
-            self.observation[i*self.parameter_size + 1] = self.data[i][5]
+            self.observation[i*self.parameter_size + 1] = self.data[i][8]
+            if self.observation[i*self.parameter_size + 1] > click_num_max:
+                click_num_max = self.observation[i*self.parameter_size + 1]
+            if self.observation[i*self.parameter_size + 1] < click_num_min:
+                click_num_min = self.observation[i*self.parameter_size + 1]
+                
+            self.observation[i*self.parameter_size + 2] = self.data[i][9]
+            if self.observation[i*self.parameter_size + 2] > click_rate_max:
+                click_rate_max = self.observation[i*self.parameter_size + 2]
+            if self.observation[i*self.parameter_size + 2] < click_rate_min:
+                click_rate_min = self.observation[i*self.parameter_size + 2]
+                
+
+        #normal action
+        normal_check_popularity = 0.
+        normal_check_click_num = 0.
+        normal_check_click_rate = 0.
+        logger.debug('popularity_max:' + str(popularity_max))
+        logger.debug('popularity_min:' + str(popularity_min))
+        logger.debug('click_num_max:' + str(click_num_max))
+        logger.debug('click_num_min:' + str(click_num_min))
+        logger.debug('click_rate_max:' + str(click_rate_max))
+        logger.debug('click_rate_min:' + str(click_rate_min))
+
+        for j in range(self.keywords_length):
+            self.observation[j*self.parameter_size] = (self.observation[j*self.parameter_size] - popularity_min) / (popularity_max - popularity_min)
+            normal_check_popularity+=self.observation[j*self.parameter_size]
+            
+            self.observation[j*self.parameter_size + 1] = (self.observation[j*self.parameter_size + 1] - click_num_min) / (click_num_max - click_num_min)
+            normal_check_click_num+=self.observation[j*self.parameter_size + 1]
+            
+            self.observation[j*self.parameter_size + 2] = (self.observation[j*self.parameter_size + 2] - click_rate_min) / (click_rate_max - click_rate_min)
+            normal_check_click_rate+=self.observation[j*self.parameter_size + 2]
+                
+        
+        nomal_check_total = normal_check_popularity + normal_check_click_num + normal_check_click_rate
+        logger.debug('nomal_check_total:' + str(nomal_check_total))
+        #add mean value
+        normal_check_mean = nomal_check_total / self.observation.shape[0]
+        logger.debug('normal_check_mean:' + str(normal_check_mean))
+        normal_check_max = self.observation[0]
+        normal_check_min = self.observation[0]
+        for n in range(self.observation.shape[0]):
+            self.observation[n] += normal_check_mean
+#            logger.debug('self.observation[n]:' + str(self.observation[n]))
+            if self.observation[n] > normal_check_max:
+                normal_check_max = self.observation[n]
+            if self.observation[n] <= normal_check_min:
+                normal_check_min = self.observation[n]
+        
+        logger.debug('normal_check_max:' + str(normal_check_max))
+        logger.debug('normal_check_min:' + str(normal_check_min))
+        
+        #check normal_action
+        normal_check_last = 0.
+        for x in range(self.observation.shape[0]):
+#            logger.debug('self.observation[n]:' + str(self.observation[x]))
+            self.observation[x] = (self.observation[x] - normal_check_min) / (normal_check_max - normal_check_min)
+#            logger.debug('self.observation[n]_:' + str(self.observation[x]))
+            normal_check_last += self.observation[x]
+        logger.debug('normal_check_last:' + str(normal_check_last))
+                    
+        logger.debug('print total observation--------------------------')
+        for a in range(self.keywords_length):
+            print_data = []
+            print_data.append(self.observation[a*self.parameter_size])
+            print_data.append(self.observation[a*self.parameter_size + 1])
+            print_data.append(self.observation[a*self.parameter_size + 2])
+            logger.debug(str(print_data))
+        logger.debug('end total observation--------------------------')
+                    
+#        logger.debug(str(self.observation))
+        logger.debug('normal_check_popularity:' + str(normal_check_popularity))
+        logger.debug('normal_check_click_num:' + str(normal_check_click_num))
+        logger.debug('normal_check_click_rate:' + str(normal_check_click_rate))
+        logger.debug('end_observation-------------------------')
+        self.observation_space = Box(low = -self.observation,high = self.observation,dtype = np.float32)
+#        self.keys, shapes, dtypes = self.obs_space_info(self.observation_space)
+#        self.buf_obs = { k: np.zeros((1,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys }
+#        self.buf_obs[None][0] = self.observation
+        logger.debug('self.observation_space:')
+        logger.debug(str(self.observation_space))
+        return self.observation
+    
+    def init_observation_highroi_hightconveration(self):
+        logger.debug('observation-------------------------')
+#        self.keywords_length = 10
+        self.keywords_length = len(self.data)
+        if self.keywords_length == 0:
+            logger.info('self.keywords_length num is 0')
+            return False
+        logger.debug('self.keywords_length: '+ str(self.keywords_length))
+        self.observation = np.empty(self.keywords_length * self.parameter_size,float)
+        popularity_max = self.data[0][1]
+        popularity_min = self.data[0][1]
+        conversion_max = self.data[0][2]
+        conversion_min = self.data[0][2]
+        transform_1_max = self.data[0][5]
+        transform_1_min = self.data[0][5]
+        transform_2_max = self.data[0][6]
+        transform_2_min = self.data[0][6]
+        transform_3_max = self.data[0][7]
+        transform_3_min = self.data[0][7]
+        buy_num_max = self.data[0][12]
+        buy_num_min = self.data[0][12]
+        money_num_max = self.data[0][14]
+        money_num_min = self.data[0][14]
+        roi_max = self.data[0][15]
+        roi_min = self.data[0][15]
+        for i in range(self.keywords_length):
+            self.observation[i*self.parameter_size] = self.data[i][1]
+            if self.observation[i*self.parameter_size] > popularity_max:
+                popularity_max = self.observation[i*self.parameter_size]
+            if self.observation[i*self.parameter_size] < popularity_min:
+                popularity_min = self.observation[i*self.parameter_size]
+                
+            self.observation[i*self.parameter_size + 1] = self.data[i][2]
             if self.observation[i*self.parameter_size + 1] > conversion_max:
                 conversion_max = self.observation[i*self.parameter_size + 1]
             if self.observation[i*self.parameter_size + 1] < conversion_min:
                 conversion_min = self.observation[i*self.parameter_size + 1]
                 
-            self.observation[i*self.parameter_size + 2] = self.data[i][8]
+            self.observation[i*self.parameter_size + 2] = self.data[i][5]
             if self.observation[i*self.parameter_size + 2] > transform_1_max:
                 transform_1_max = self.observation[i*self.parameter_size + 2]
             if self.observation[i*self.parameter_size + 2] < transform_1_min:
                 transform_1_min = self.observation[i*self.parameter_size + 2]
                 
-            self.observation[i*self.parameter_size + 3] = self.data[i][9]
+            self.observation[i*self.parameter_size + 3] = self.data[i][6]
             if self.observation[i*self.parameter_size + 3] > transform_2_max:
                 transform_2_max = self.observation[i*self.parameter_size + 3]
             if self.observation[i*self.parameter_size + 3] < transform_2_min:
                 transform_2_min = self.observation[i*self.parameter_size + 3]
                 
-            self.observation[i*self.parameter_size + 4] = self.data[i][10]
+            self.observation[i*self.parameter_size + 4] = self.data[i][7]
+            if self.observation[i*self.parameter_size + 4] > transform_3_max:
+                transform_3_max = self.observation[i*self.parameter_size + 4]
+            if self.observation[i*self.parameter_size + 4] < transform_3_min:
+                transform_3_min = self.observation[i*self.parameter_size + 4]
+                
+            self.observation[i*self.parameter_size + 5] = self.data[i][12]
+            if self.observation[i*self.parameter_size] > buy_num_max:
+                buy_num_max = self.observation[i*self.parameter_size + 5]
+            if self.observation[i*self.parameter_size] < buy_num_min:
+                buy_num_min = self.observation[i*self.parameter_size + 5]
+                
+            self.observation[i*self.parameter_size + 6] = self.data[i][14]
+            if self.observation[i*self.parameter_size + 6] > money_num_max:
+                money_num_max = self.observation[i*self.parameter_size + 6]
+            if self.observation[i*self.parameter_size + 6] < money_num_min:
+                money_num_min = self.observation[i*self.parameter_size + 6]
+                
+            self.observation[i*self.parameter_size + 7] = self.data[i][15]
+            if self.observation[i*self.parameter_size + 7] > roi_max:
+                roi_max = self.observation[i*self.parameter_size + 7]
+            if self.observation[i*self.parameter_size + 7] < roi_min:
+                roi_min = self.observation[i*self.parameter_size + 7]
+
+        #normal action
+        normal_check_popularity = 0.
+        normal_check_conversion = 0.
+        normal_check_transform_1 = 0.
+        normal_check_transform_2 = 0.
+        normal_check_transform_3 = 0.
+        
+        normal_check_buy_num = 0.
+        normal_check_money_num = 0.
+        normal_check_roi_num = 0.
+        
+        logger.debug('buy_num_max:' + str(buy_num_max))
+        logger.debug('buy_num_min:' + str(buy_num_min))
+        logger.debug('money_num_max:' + str(money_num_max))
+        logger.debug('money_num_min:' + str(money_num_min))
+        logger.debug('money_num_max:' + str(money_num_max))
+        logger.debug('money_num_min:' + str(money_num_min))
+        logger.debug('popularity_max:' + str(popularity_max))
+        logger.debug('popularity_min:' + str(popularity_min))
+        logger.debug('conversion_max:' + str(conversion_max))
+        logger.debug('conversion_min:' + str(conversion_min))
+        logger.debug('transform_1_max:' + str(transform_1_max))
+        logger.debug('transform_1_min:' + str(transform_1_min))
+        logger.debug('transform_2_max:' + str(transform_2_max))
+        logger.debug('transform_2_min:' + str(transform_2_min))
+        logger.debug('transform_3_max:' + str(transform_3_max))
+        logger.debug('transform_3_min:' + str(transform_3_min))
+        for j in range(self.keywords_length):
+            self.observation[j*self.parameter_size] = (self.observation[j*self.parameter_size] - popularity_min) / (popularity_max - popularity_min)
+            normal_check_popularity+=self.observation[j*self.parameter_size]
+            
+            self.observation[j*self.parameter_size + 1] = (self.observation[j*self.parameter_size + 1] - conversion_min) / (conversion_max - conversion_min)
+            normal_check_conversion+=self.observation[j*self.parameter_size + 1]
+            
+            self.observation[j*self.parameter_size + 2] = (self.observation[j*self.parameter_size + 2] - transform_1_min) / (transform_1_max - transform_1_min)
+            normal_check_transform_1+=self.observation[j*self.parameter_size + 2]
+            
+            self.observation[j*self.parameter_size + 3] = (self.observation[j*self.parameter_size + 3] - transform_2_min) / (transform_2_max - transform_2_min)
+            normal_check_transform_2+=self.observation[j*self.parameter_size + 3]
+            
+            self.observation[j*self.parameter_size + 4] = (self.observation[j*self.parameter_size + 4] - transform_3_min) / (transform_3_max - transform_3_min)
+            normal_check_transform_3+=self.observation[j*self.parameter_size + 4]
+            
+            self.observation[j*self.parameter_size + 5] = (self.observation[j*self.parameter_size + 5] - buy_num_min) / (buy_num_max - buy_num_min)
+            normal_check_buy_num+=self.observation[j*self.parameter_size]
+            
+            self.observation[j*self.parameter_size + 6] = (self.observation[j*self.parameter_size + 6] - money_num_min) / (money_num_max - money_num_min)
+            normal_check_money_num+=self.observation[j*self.parameter_size + 1]
+            
+            self.observation[j*self.parameter_size + 7] = (self.observation[j*self.parameter_size + 7] - money_num_min) / (money_num_max - money_num_min)
+            normal_check_roi_num+=self.observation[j*self.parameter_size + 2]
+            
+        
+        nomal_check_total = normal_check_popularity + normal_check_conversion + normal_check_transform_1 + normal_check_transform_2 + normal_check_transform_3 + normal_check_buy_num + normal_check_money_num + normal_check_roi_num
+        logger.debug('nomal_check_total:' + str(nomal_check_total))
+        #add mean value
+        normal_check_mean = nomal_check_total / self.observation.shape[0]
+        logger.debug('normal_check_mean:' + str(normal_check_mean))
+        normal_check_max = self.observation[0]
+        normal_check_min = self.observation[0]
+        for n in range(self.observation.shape[0]):
+            self.observation[n] += normal_check_mean
+#            logger.debug('self.observation[n]:' + str(self.observation[n]))
+            if self.observation[n] > normal_check_max:
+                normal_check_max = self.observation[n]
+            if self.observation[n] <= normal_check_min:
+                normal_check_min = self.observation[n]
+        
+        logger.debug('normal_check_max:' + str(normal_check_max))
+        logger.debug('normal_check_min:' + str(normal_check_min))
+        
+        #check normal_action
+        normal_check_last = 0.
+        for x in range(self.observation.shape[0]):
+#            logger.debug('self.observation[n]:' + str(self.observation[x]))
+            self.observation[x] = (self.observation[x] - normal_check_min) / (normal_check_max - normal_check_min)
+#            logger.debug('self.observation[n]_:' + str(self.observation[x]))
+            normal_check_last += self.observation[x]
+        logger.debug('normal_check_last:' + str(normal_check_last))
+                    
+        logger.debug('print total observation--------------------------')
+        for a in range(self.keywords_length):
+            print_data = []
+            print_data.append(self.observation[a*self.parameter_size])
+            print_data.append(self.observation[a*self.parameter_size + 1])
+            print_data.append(self.observation[a*self.parameter_size + 2])
+            print_data.append(self.observation[a*self.parameter_size + 3])
+            print_data.append(self.observation[a*self.parameter_size + 4])
+            print_data.append(self.observation[a*self.parameter_size + 5])
+            print_data.append(self.observation[a*self.parameter_size + 6])
+            print_data.append(self.observation[a*self.parameter_size + 7])
+            logger.debug(str(print_data))
+        logger.debug('end total observation--------------------------')
+                    
+#        logger.debug(str(self.observation))
+        logger.debug('normal_check_popularity:' + str(normal_check_popularity))
+        logger.debug('normal_check_conversion:' + str(normal_check_conversion))
+        logger.debug('normal_check_transform_1:' + str(normal_check_transform_1))
+        logger.debug('normal_check_transform_2:' + str(normal_check_transform_2))
+        logger.debug('normal_check_transform_3:' + str(normal_check_transform_3))
+        logger.debug('normal_check_buy_num:' + str(normal_check_buy_num))
+        logger.debug('normal_check_money_num:' + str(normal_check_money_num))
+        logger.debug('normal_check_roi_num:' + str(normal_check_roi_num))
+        logger.debug('end_observation-------------------------')
+        self.observation_space = Box(low = -self.observation,high = self.observation,dtype = np.float32)
+#        self.keys, shapes, dtypes = self.obs_space_info(self.observation_space)
+#        self.buf_obs = { k: np.zeros((1,) + tuple(shapes[k]), dtype=dtypes[k]) for k in self.keys }
+#        self.buf_obs[None][0] = self.observation
+        logger.debug('self.observation_space:')
+        logger.debug(str(self.observation_space))
+        return self.observation
+    
+    def init_observation(self):
+        logger.debug('observation-------------------------')
+#        self.keywords_length = 10
+        self.keywords_length = len(self.data)
+        if self.keywords_length == 0:
+            logger.info('self.keywords_length num is 0')
+            return False
+        logger.debug('self.keywords_length: '+ str(self.keywords_length))
+        self.observation = np.empty(self.keywords_length * self.parameter_size,float)
+        popularity_max = self.data[0][1]
+        popularity_min = self.data[0][1]
+        conversion_max = self.data[0][2]
+        conversion_min = self.data[0][2]
+        transform_1_max = self.data[0][5]
+        transform_1_min = self.data[0][5]
+        transform_2_max = self.data[0][6]
+        transform_2_min = self.data[0][6]
+        transform_3_max = self.data[0][7]
+        transform_3_min = self.data[0][7]
+        for i in range(self.keywords_length):
+            self.observation[i*self.parameter_size] = self.data[i][1]
+            if self.observation[i*self.parameter_size] > popularity_max:
+                popularity_max = self.observation[i*self.parameter_size]
+            if self.observation[i*self.parameter_size] < popularity_min:
+                popularity_min = self.observation[i*self.parameter_size]
+                
+            self.observation[i*self.parameter_size + 1] = self.data[i][2]
+            if self.observation[i*self.parameter_size + 1] > conversion_max:
+                conversion_max = self.observation[i*self.parameter_size + 1]
+            if self.observation[i*self.parameter_size + 1] < conversion_min:
+                conversion_min = self.observation[i*self.parameter_size + 1]
+                
+            self.observation[i*self.parameter_size + 2] = self.data[i][5]
+            if self.observation[i*self.parameter_size + 2] > transform_1_max:
+                transform_1_max = self.observation[i*self.parameter_size + 2]
+            if self.observation[i*self.parameter_size + 2] < transform_1_min:
+                transform_1_min = self.observation[i*self.parameter_size + 2]
+                
+            self.observation[i*self.parameter_size + 3] = self.data[i][6]
+            if self.observation[i*self.parameter_size + 3] > transform_2_max:
+                transform_2_max = self.observation[i*self.parameter_size + 3]
+            if self.observation[i*self.parameter_size + 3] < transform_2_min:
+                transform_2_min = self.observation[i*self.parameter_size + 3]
+                
+            self.observation[i*self.parameter_size + 4] = self.data[i][7]
             if self.observation[i*self.parameter_size + 4] > transform_3_max:
                 transform_3_max = self.observation[i*self.parameter_size + 4]
             if self.observation[i*self.parameter_size + 4] < transform_3_min:
@@ -237,8 +663,7 @@ class WordAgent(object):
 #            logger.debug('self.observation[n]_:' + str(self.observation[x]))
             normal_check_last += self.observation[x]
         logger.debug('normal_check_last:' + str(normal_check_last))
-            
-        
+                    
         logger.debug('print total observation--------------------------')
         for a in range(self.keywords_length):
             print_data = []
@@ -249,9 +674,7 @@ class WordAgent(object):
             print_data.append(self.observation[a*self.parameter_size + 4])
             logger.debug(str(print_data))
         logger.debug('end total observation--------------------------')
-            
-            
-            
+                    
 #        logger.debug(str(self.observation))
         logger.debug('normal_check_popularity:' + str(normal_check_popularity))
         logger.debug('normal_check_conversion:' + str(normal_check_conversion))
@@ -289,7 +712,7 @@ class WordAgent(object):
         logger.debug('result count: ' + str(count))
         for i in range(count):
             key_id = int(self.result[i])
-            key_words = self.data[key_id][1]
+            key_words = self.data[key_id][0]
             self.result_keywords.append(key_words)
             logger.debug('key_id: ' + str(key_id))
             logger.debug('keywords: ' + str(key_words))
@@ -310,11 +733,8 @@ class WordAgent(object):
         self.select_index = index;
         popularity = self.observation[index*self.parameter_size]
         logger.debug('step popularity: ' + str(popularity))
-#        conversion = self.observation[index*self.parameter_size + 1]
-#        transform_1 = self.observation[index*self.parameter_size + 2]
-#        transform_2 = self.observation[index*self.parameter_size + 3]
-#        transform_3 = self.observation[index*self.parameter_size + 4]
         keywords_id = index
+        
         self.reward = agent.reward.get_reward_value(self.observation,self.parameter_size,index,self.reward_type)
         
         self.observation[index*self.parameter_size] = -1.
@@ -326,12 +746,6 @@ class WordAgent(object):
         self.result.append(int(keywords_id))
         self.select_total_reward += self.reward
         
-        logger.debug('step self.observation[index*self.parameter_size]: ' + str(self.observation[index*self.parameter_size]))
-        logger.debug('step self.observation[index*self.parameter_size + 1]: ' + str(self.observation[index*self.parameter_size + 1]))
-        logger.debug('step self.observation[index*self.parameter_size + 2]: ' + str(self.observation[index*self.parameter_size + 2]))
-        logger.debug('step self.observation[index*self.parameter_size + 3]: ' + str(self.observation[index*self.parameter_size + 3]))
-        logger.debug('step self.observation[index*self.parameter_size + 4]: ' + str(self.observation[index*self.parameter_size + 4]))
-#        logger.info('step self.observation[index*self.parameter_size + 5]: ' + str(self.observation[index*self.parameter_size + 5]))
         logger.debug('step self.observation result: ' + str(self.result))
         logger.debug('----------------step end---------------- ')
         self.state[0] = self.reward
@@ -385,10 +799,10 @@ class WordAgent(object):
             dtypes[key] = box.dtype
         return keys, shapes, dtypes
 
-#logger.debug('test openpyxl sucessful!')
-#agent = WordAgent('../assert/keyword.xlsx','xlsx')
-#agent.openExcel()
-#agent.reset()
+logger.debug('test openpyxl sucessful!')
+wordimp = WordAgent('../assert/collagen.xlsx','xlsx',agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value)
+wordimp.openExcel()
+wordimp.reset()
 
     
     

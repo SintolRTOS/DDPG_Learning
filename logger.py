@@ -301,7 +301,7 @@ class Logger(object):
     def __init__(self, dir, output_formats, comm=None):
         self.name2val = defaultdict(float)  # values this iteration
         self.name2cnt = defaultdict(int)
-        self.level = INFO
+        self.level = DEBUG
         self.dir = dir
         self.output_formats = output_formats
         self.comm = comm

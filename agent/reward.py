@@ -9,20 +9,14 @@ from enum import Enum
 
 
 class ProcessType(Enum):
-    #胶原蛋白
     #高流量
     COLLAGE_HIGHFLOW = 1
     #高转化
     COLLAGE_HIGHCONVERSION = 2
     #高ROI
     COLLAGE_HIGHROI = 3
-    #牡蛎
-    #高流量
-    OYSTER_HIGHFLOW = 4
-    #高转化
-    OYSTER_HIGHCONVERSION = 5
-    #高ROI
-    OYSTER_HIGHROI = 6
+    #高转化+高ROI
+    COLLAGE_HIGHROI_HIGHCONVERSION = 4
     
 
 
@@ -35,11 +29,34 @@ def get_reward_value(observation,parameter_size,index,reward_type):
         transform_2 = observation[index*parameter_size + 3]
         transform_3 = observation[index*parameter_size + 4]
         reward = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
-    else:
+        
+    elif reward_type == ProcessType.COLLAGE_HIGHFLOW.value:
+        popularity = observation[index*parameter_size]
+        click_num = observation[index*parameter_size + 1]
+        click_rate = observation[index*parameter_size + 2]
+        if click_rate == 0:
+            reward = popularity
+        else:
+            reward = popularity + click_num / click_rate * 10
+    elif reward_type == ProcessType.COLLAGE_HIGHROI.value:
+        buy_num = observation[index*parameter_size]
+        money_num = observation[index*parameter_size + 1]
+        roi_rate = observation[index*parameter_size + 2]
+        reward = buy_num + money_num*2  + roi_rate * 5
+    
+    elif reward_type == ProcessType.COLLAGE_HIGHROI_HIGHCONVERSION.value:
         popularity = observation[index*parameter_size]
         conversion = observation[index*parameter_size + 1]
         transform_1 = observation[index*parameter_size + 2]
         transform_2 = observation[index*parameter_size + 3]
         transform_3 = observation[index*parameter_size + 4]
-        reward = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
+        converation_value = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
+        
+        buy_num = observation[index*parameter_size]
+        money_num = observation[index*parameter_size + 1]
+        roi_rate = observation[index*parameter_size + 2]   
+        roi_value = buy_num + money_num*2  + roi_rate * 5
+        
+        reward = converation_value + roi_value * 2.0
+        
     return reward
