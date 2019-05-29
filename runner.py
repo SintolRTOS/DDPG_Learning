@@ -76,8 +76,12 @@ class runner_imp(object):
         learn = self.get_learn_function(args.alg)
         alg_kwargs = self.get_learn_function_defaults(args.alg, env_type)
         alg_kwargs.update(extra_args)
-
-        env = self.build_env(args)
+        
+        try:
+            env = self.build_env(args)
+        except Exception as err:    
+            logger.error('build_env error:' + str(err))
+            
         if args.save_video_interval != 0:
             env = VecVideoRecorder(env, osp.join(logger.get_dir(), "videos"), record_video_trigger=lambda x: x % args.save_video_interval == 0, video_length=args.save_video_length)
 
@@ -89,13 +93,19 @@ class runner_imp(object):
 
         print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
-        model = learn(
+        try:
+            model = learn(
                 env=env,
                 seed=seed,
                 total_timesteps=total_timesteps,
                 render = True,
                 **alg_kwargs
                 )
+            
+        except Exception as err:    
+            
+            logger.error('learn error:' + str(err))
+        
 
         return model, env
     

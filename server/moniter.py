@@ -70,14 +70,12 @@ class MoniterProcess(threading.Thread):
         argstr = 'python ../runner.py ' + RUN_STR
         logger.info('start_run_process: ')
         logger.info(argstr)
-        _thread.start_new_thread( self.listener_log_info, (self.log_file,) )
-        self.p = subprocess.run(argstr.split(' '))
-#        self.os_id = self.p.pid
-#        while True:
-#            time.sleep(1)
-#            if self.p.poll() == 0:
-#                break
-#        self.p.wait()
+        try:
+            _thread.start_new_thread( self.listener_log_info, (self.log_file,) )
+            self.p = subprocess.run(argstr.split(' '))
+        except Exception as err:     #进程和线程运行异常
+            logger.error('log process_' + str(self.process_id) + ' MoniterProcess error:' + str(err))
+
         logger.info('complete_run_process:' + str(self.p))   
         self.iscompleted = True
     
