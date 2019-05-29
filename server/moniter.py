@@ -93,6 +93,8 @@ class MoniterProcess(threading.Thread):
         self.is_get_per_process = False;
         while True:
             time.sleep(10)
+            if self.iscompleted:
+                break
             self.read_file = None
             self.pos = 0
             self.rank_end = False

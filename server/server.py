@@ -15,7 +15,7 @@ import http.server
 import json
 import logger
 
-HOST_NAME = '127.0.0.1' 
+HOST_NAME = '192.168.63.104' 
 PORT_NUMBER = 9090
 CONIFRM_PATH = '/tmp'
 global PROCESS_ID
