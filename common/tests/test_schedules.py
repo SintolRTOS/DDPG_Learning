@@ -1,6 +1,9 @@
 import numpy as np
 
-from baselines.common.schedules import ConstantSchedule, PiecewiseSchedule
+import sys 
+sys.path.append("../../") 
+
+from common.schedules import ConstantSchedule, PiecewiseSchedule
 
 
 def test_piecewise_schedule():

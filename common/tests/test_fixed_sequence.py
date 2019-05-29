@@ -1,9 +1,13 @@
 import pytest
-from baselines.common.tests.envs.fixed_sequence_env import FixedSequenceEnv
 
-from baselines.common.tests.util import simple_test
-from baselines.run import get_learn_function
-from baselines.common.tests import mark_slow
+import sys 
+sys.path.append("../../") 
+
+from common.tests.envs.fixed_sequence_env import FixedSequenceEnv
+
+from common.tests.util import simple_test
+from run import get_learn_function
+from common.tests import mark_slow
 
 
 common_kwargs = dict(

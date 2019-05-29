@@ -1,6 +1,9 @@
 # smoke tests of plot_util
-from baselines.common import plot_util as pu
-from baselines.common.tests.util import smoketest
+import sys 
+sys.path.append("../../") 
+
+from common import plot_util as pu
+from common.tests.util import smoketest
 
 
 def test_plot_util():

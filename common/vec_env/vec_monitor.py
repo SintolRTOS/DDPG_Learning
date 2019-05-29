@@ -1,5 +1,9 @@
 from . import VecEnvWrapper
-from baselines.bench.monitor import ResultsWriter
+
+import sys 
+sys.path.append("../../") 
+
+from bench.monitor import ResultsWriter
 import numpy as np
 import time
 from collections import deque

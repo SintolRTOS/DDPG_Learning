@@ -1,8 +1,11 @@
 import pytest
-from baselines.common.tests.envs.identity_env import DiscreteIdentityEnv, BoxIdentityEnv, MultiDiscreteIdentityEnv
-from baselines.run import get_learn_function
-from baselines.common.tests.util import simple_test
-from baselines.common.tests import mark_slow
+import sys 
+sys.path.append("../../") 
+
+from common.tests.envs.identity_env import DiscreteIdentityEnv, BoxIdentityEnv, MultiDiscreteIdentityEnv
+from run import get_learn_function
+from common.tests.util import simple_test
+from common.tests import mark_slow
 
 common_kwargs = dict(
     total_timesteps=30000,

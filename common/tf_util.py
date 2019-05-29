@@ -1,3 +1,6 @@
+import sys 
+sys.path.append("..") 
+
 import numpy as np
 import tensorflow as tf  # pylint: ignore-module
 import copy
@@ -292,7 +295,7 @@ def get_placeholder_cached(name):
 # ================================================================
 
 def display_var_info(vars):
-    from baselines import logger
+    import logger
     count_params = 0
     for v in vars:
         name = v.name
@@ -323,14 +326,14 @@ def get_available_gpus(session_config=None):
 # ================================================================
 
 def load_state(fname, sess=None):
-    from baselines import logger
+    import logger
     logger.warn('load_state method is deprecated, please use load_variables instead')
     sess = sess or get_session()
     saver = tf.train.Saver()
     saver.restore(tf.get_default_session(), fname)
 
 def save_state(fname, sess=None):
-    from baselines import logger
+    import logger
     logger.warn('save_state method is deprecated, please use save_variables instead')
     sess = sess or get_session()
     dirname = os.path.dirname(fname)

@@ -176,7 +176,7 @@ class runner_imp(object):
     def get_alg_module(self,alg, submodule=None):
         submodule = submodule or alg
         try:
-            # first try to import the alg module from baselines
+            # first try to import the alg module from sintolrtos
             alg_module = import_module('.'.join([alg, submodule]))
         except ImportError:
             # then from rl_algs

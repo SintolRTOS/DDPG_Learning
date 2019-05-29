@@ -12,7 +12,10 @@ from ddpg.models import Actor, Critic
 from ddpg.memory import Memory
 from ddpg.noise import AdaptiveParamNoiseSpec, NormalActionNoise, OrnsteinUhlenbeckActionNoise
 from common import set_global_seeds
-import baselines.common.tf_util as U
+import sys 
+sys.path.append("../../") 
+
+import common.tf_util as U
 
 import logger
 import numpy as np

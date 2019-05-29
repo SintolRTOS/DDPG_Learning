@@ -1,6 +1,9 @@
+import sys 
+sys.path.append("..") 
+
 import tensorflow as tf
 import numpy as np
-from baselines.common.tf_util import get_session
+from common.tf_util import get_session
 
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
@@ -119,7 +122,7 @@ def test_tf_runningmeanstd():
 
 def profile_tf_runningmeanstd():
     import time
-    from baselines.common import tf_util
+    from common import tf_util
 
     tf_util.get_session( config=tf.ConfigProto(
         inter_op_parallelism_threads=1,

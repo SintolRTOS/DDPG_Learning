@@ -1,6 +1,9 @@
-from baselines.common import mpi_util
-from baselines import logger
-from baselines.common.tests.test_with_mpi import with_mpi
+import sys 
+sys.path.append("../../") 
+
+from common import mpi_util
+import logger
+from common.tests.test_with_mpi import with_mpi
 try:
     from mpi4py import MPI
 except ImportError:

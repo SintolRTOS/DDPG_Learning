@@ -2,9 +2,12 @@ import pytest
 import gym
 import tensorflow as tf
 
-from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
-from baselines.run import get_learn_function
-from baselines.common.tf_util import make_session
+import sys 
+sys.path.append("../../") 
+
+from common.vec_env.subproc_vec_env import SubprocVecEnv
+from run import get_learn_function
+from common.tf_util import make_session
 
 algos = ['a2c', 'acer', 'acktr', 'deepq', 'ppo2', 'trpo_mpi']
 

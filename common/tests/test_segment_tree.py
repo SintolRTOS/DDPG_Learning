@@ -1,6 +1,9 @@
 import numpy as np
 
-from baselines.common.segment_tree import SumSegmentTree, MinSegmentTree
+import sys 
+sys.path.append("../../") 
+
+from common.segment_tree import SumSegmentTree, MinSegmentTree
 
 
 def test_tree_set():

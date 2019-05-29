@@ -5,7 +5,7 @@ matplotlib.use('TkAgg') # Can change to 'Agg' for non-interactive mode
 import matplotlib.pyplot as plt
 plt.rcParams['svg.fonttype'] = 'none'
 
-from baselines.common import plot_util
+from common import plot_util
 
 X_TIMESTEPS = 'timesteps'
 X_EPISODES = 'episodes'
@@ -71,7 +71,7 @@ def plot_results(dirs, num_timesteps=10e6, xaxis=X_TIMESTEPS, yaxis=Y_REWARD, ti
     plot_util.plot_results(results, xy_fn=lambda r: ts2xy(r['monitor'], xaxis, yaxis), split_fn=split_fn, average_group=True, resample=int(1e6))
 
 # Example usage in jupyter-notebook
-# from baselines.results_plotter import plot_results
+# from results_plotter import plot_results
 # %matplotlib inline
 # plot_results("./log")
 # Here ./log is a directory containing the monitor.csv files

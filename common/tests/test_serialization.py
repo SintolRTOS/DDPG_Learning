@@ -5,10 +5,13 @@ import pytest
 import tensorflow as tf
 import numpy as np
 
-from baselines.common.tests.envs.mnist_env import MnistEnv
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.run import get_learn_function
-from baselines.common.tf_util import make_session, get_session
+import sys 
+sys.path.append("../../") 
+
+from common.tests.envs.mnist_env import MnistEnv
+from common.vec_env.dummy_vec_env import DummyVecEnv
+from run import get_learn_function
+from common.tf_util import make_session, get_session
 
 from functools import partial
 

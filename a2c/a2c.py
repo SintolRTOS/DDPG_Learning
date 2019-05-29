@@ -2,16 +2,20 @@ import time
 import functools
 import tensorflow as tf
 
-from baselines import logger
 
-from baselines.common import set_global_seeds, explained_variance
-from baselines.common import tf_util
-from baselines.common.policies import build_policy
+import sys 
+sys.path.append("..") 
+
+import logger
+
+from common import set_global_seeds, explained_variance
+from common import tf_util
+from common.policies import build_policy
 
 
-from baselines.a2c.utils import Scheduler, find_trainable_variables
-from baselines.a2c.runner import Runner
-from baselines.ppo2.ppo2 import safemean
+from a2c.utils import Scheduler, find_trainable_variables
+from a2c.runner import Runner
+from ppo2.ppo2 import safemean
 from collections import deque
 
 from tensorflow import losses

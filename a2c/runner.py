@@ -1,6 +1,9 @@
+import sys 
+sys.path.append("..") 
+
 import numpy as np
-from baselines.a2c.utils import discount_with_dones
-from baselines.common.runners import AbstractEnvRunner
+from a2c.utils import discount_with_dones
+from common.runners import AbstractEnvRunner
 
 class Runner(AbstractEnvRunner):
     """

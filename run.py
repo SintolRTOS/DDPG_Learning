@@ -7,11 +7,11 @@ from collections import defaultdict
 import tensorflow as tf
 import numpy as np
 
-from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
-from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
-from baselines.common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env
-from baselines.common.tf_util import get_session
-from baselines import logger
+from common.vec_env import VecFrameStack, VecNormalize, VecEnv
+from common.vec_env.vec_video_recorder import VecVideoRecorder
+from common.cmd_util import common_arg_parser, parse_unknown_args, make_vec_env, make_env
+from common.tf_util import get_session
+import logger
 from importlib import import_module
 
 try:
@@ -154,8 +154,8 @@ def get_default_network(env_type):
 def get_alg_module(alg, submodule=None):
     submodule = submodule or alg
     try:
-        # first try to import the alg module from baselines
-        alg_module = import_module('.'.join(['baselines', alg, submodule]))
+        # first try to import the alg module from sintolrtos
+        alg_module = import_module('.'.join(['sintolrtos', alg, submodule]))
     except ImportError:
         # then from rl_algs
         alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))

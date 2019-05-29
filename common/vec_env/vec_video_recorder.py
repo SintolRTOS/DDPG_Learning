@@ -1,6 +1,9 @@
 import os
-from baselines import logger
-from baselines.common.vec_env import VecEnvWrapper
+import sys 
+sys.path.append("../../") 
+
+import logger
+from common.vec_env import VecEnvWrapper
 from gym.wrappers.monitoring import video_recorder
 
 

@@ -6,6 +6,9 @@ import base64
 import pytest
 from functools import wraps
 
+import sys 
+sys.path.append("../../") 
+
 try:
     from mpi4py import MPI
 except ImportError:
@@ -19,7 +22,7 @@ def with_mpi(nproc=2, timeout=30, skip_if_no_mpi=True):
             subprocess.check_call([
                 'mpiexec','-n', str(nproc),
                 sys.executable,
-                '-m', 'baselines.common.tests.test_with_mpi',
+                '-m', 'common.tests.test_with_mpi',
                 serialized_fn
             ], env=os.environ, timeout=timeout)
 

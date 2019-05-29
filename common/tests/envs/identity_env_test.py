@@ -1,4 +1,6 @@
-from baselines.common.tests.envs.identity_env import DiscreteIdentityEnv
+import sys 
+sys.path.append("..") 
+from common.tests.envs.identity_env import DiscreteIdentityEnv
 
 
 def test_discrete_nodelay():

@@ -1,6 +1,9 @@
+import sys 
+sys.path.append("../../") 
+
 import tensorflow as tf
 import numpy as np
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
+from common.vec_env.dummy_vec_env import DummyVecEnv
 
 N_TRIALS = 10000
 N_EPISODES = 100

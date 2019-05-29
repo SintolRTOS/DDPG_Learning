@@ -1,6 +1,10 @@
 # tests for tf_util
 import tensorflow as tf
-from baselines.common.tf_util import (
+
+import sys 
+sys.path.append("../../") 
+
+from common.tf_util import (
     function,
     initialize,
     single_threaded_session

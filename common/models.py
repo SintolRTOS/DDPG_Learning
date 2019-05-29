@@ -1,8 +1,12 @@
+
+import sys 
+sys.path.append("..") 
+
 import numpy as np
 import tensorflow as tf
-from baselines.a2c import utils
-from baselines.a2c.utils import conv, fc, conv_to_fc, batch_to_seq, seq_to_batch
-from baselines.common.mpi_running_mean_std import RunningMeanStd
+from a2c import utils
+from a2c.utils import conv, fc, conv_to_fc, batch_to_seq, seq_to_batch
+from common.mpi_running_mean_std import RunningMeanStd
 
 mapping = {}
 
@@ -263,7 +267,7 @@ def get_network_builder(name):
 
     Usage Example:
     -------------
-    from baselines.common.models import register
+    from common.models import register
     @register("your_network_name")
     def your_network_define(**net_kwargs):
         ...

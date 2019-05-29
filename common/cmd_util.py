@@ -87,7 +87,7 @@ def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.
         gamestate = gamestate or retro.State.DEFAULT
         env = retro_wrappers.make_retro(game=env_id, max_episode_steps=10000, use_restricted_actions=retro.Actions.DISCRETE, state=gamestate)
     elif env_id == 'wordgame':
-        excelfile = '../assert/keyword.xlsx'
+        excelfile = './assert/keyword.xlsx'
         if assert_file is not None:
             excelfile = assert_file
         env = WordAgent(excelfile,'xlsx',reward_type)
@@ -132,7 +132,7 @@ def make_mujoco_env(env_id, seed, reward_scale=1.0):
     env = Monitor(env, logger_path, allow_early_resets=True)
     env.seed(seed)
     if reward_scale != 1.0:
-        from baselines.common.retro_wrappers import RewardScaler
+        from common.retro_wrappers import RewardScaler
         env = RewardScaler(env, reward_scale)
     return env
 

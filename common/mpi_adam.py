@@ -1,4 +1,9 @@
-import baselines.common.tf_util as U
+
+import sys 
+sys.path.append("..") 
+
+
+import common.tf_util as U
 import tensorflow as tf
 import numpy as np
 try:

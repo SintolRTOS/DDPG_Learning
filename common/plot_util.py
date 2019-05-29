@@ -1,3 +1,6 @@
+import sys 
+sys.path.append("..") 
+
 import matplotlib.pyplot as plt
 import os.path as osp
 import json
@@ -5,8 +8,8 @@ import os
 import numpy as np
 import pandas
 from collections import defaultdict, namedtuple
-from baselines.bench import monitor
-from baselines.logger import read_json, read_csv
+from bench import monitor
+from logger import read_json, read_csv
 
 def smooth(y, radius, mode='two_sided', valid_only=False):
     '''
