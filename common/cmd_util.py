@@ -34,7 +34,7 @@ def make_vec_env(env_id, env_type, num_env, seed,
                  initializer=None,
                  force_dummy=False,
                  assert_file=None,
-                 reward_type=0):
+                 reward_type=2):
     """
     Create a wrapped, monitored SubprocVecEnv for Atari and MuJoCo.
     """
@@ -68,7 +68,7 @@ def make_vec_env(env_id, env_type, num_env, seed,
         return DummyVecEnv([make_thunk(i + start_index, initializer=None) for i in range(num_env)])
 
 
-def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.0, gamestate=None, flatten_dict_observations=True, wrapper_kwargs=None, env_kwargs=None, logger_dir=None, initializer=None,assert_file=None,reward_type=0):
+def make_env(env_id, env_type, mpi_rank=0, subrank=0, seed=None, reward_scale=1.0, gamestate=None, flatten_dict_observations=True, wrapper_kwargs=None, env_kwargs=None, logger_dir=None, initializer=None,assert_file=None,reward_type=2):
     if initializer is not None:
         initializer(mpi_rank=mpi_rank, subrank=subrank)
 

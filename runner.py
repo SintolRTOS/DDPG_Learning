@@ -109,7 +109,7 @@ class runner_imp(object):
         if args.assert_file is not None:
             assert_file = args.assert_file
         
-        reward_type = 0
+        reward_type = 2
         if args.reward_type is not None:
             reward_type = args.reward_type
 

@@ -20,6 +20,15 @@ from gym.utils import seeding
 import agent.reward
 
 
+#高流量
+COLLAGE_HIGHFLOW = 1
+#高转化
+COLLAGE_HIGHCONVERSION = 2
+#高ROI
+COLLAGE_HIGHROI = 3
+#高转化+高ROI
+COLLAGE_HIGHROI_HIGHCONVERSION = 4
+
 POPULARITY_BOUND = 1000000
 HIGH_CONVERTION_PARAMS_SIZE = 5
 HIGH_FLOW_PARAMS_SIZE = 3
@@ -34,19 +43,24 @@ class WordAgent(object):
     def __init__(self,
                  filepath,
                  mode,
-                 reward_type = agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value):
+                 reward_type = COLLAGE_HIGHCONVERSION):
         super(WordAgent,self).__init__()
         self.filepath = filepath
         self.mode = mode
-        self.reward_type = reward_type;
-        if self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value:
+        self.reward_type = int(reward_type);
+
+        if self.reward_type == COLLAGE_HIGHCONVERSION:
             self.parameter_size = HIGH_CONVERTION_PARAMS_SIZE
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHFLOW.value:
+            
+        elif self.reward_type == COLLAGE_HIGHFLOW:
             self.parameter_size = HIGH_FLOW_PARAMS_SIZE
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI.value:
+            
+        elif self.reward_type == COLLAGE_HIGHROI:
             self.parameter_size = HIGH_ROI_PARAMS_SIZE
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI_HIGHCONVERSION.value:
+            
+        elif self.reward_type == COLLAGE_HIGHROI_HIGHCONVERSION:
             self.parameter_size = HIGH_ROI_CONVERTION_PARAMS_SIZE
+        
         self.result = []
         self.all_words = ALL_WORDS_MAX
         self.result_keywords = []
@@ -114,13 +128,18 @@ class WordAgent(object):
         self.print_result()
         
         observation = None
-        if self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value:
+
+        if self.reward_type == COLLAGE_HIGHCONVERSION:
+            logger.info('init COLLAGE_HIGHCONVERSION')
             observation = self.init_observation()
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHFLOW.value:
+        elif self.reward_type == COLLAGE_HIGHFLOW.value:
+            logger.info('init COLLAGE_HIGHFLOW')
             observation = self.init_observation_highflow()
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI.value:
+        elif self.reward_type == COLLAGE_HIGHROI.value:
+            logger.info('init COLLAGE_HIGHROI')
             observation = self.init_observation_highroi()
-        elif self.reward_type == agent.reward.ProcessType.COLLAGE_HIGHROI_HIGHCONVERSION.value:
+        elif self.reward_type == COLLAGE_HIGHROI_HIGHCONVERSION.value:
+            logger.info('init COLLAGE_HIGHROI_HIGHCONVERSION')
             observation = self.init_observation_highroi_hightconveration()
         
         if observation is False:
@@ -162,7 +181,7 @@ class WordAgent(object):
         self.keywords_length = len(self.data)
         if self.keywords_length == 0:
             logger.info('self.keywords_length num is 0')
-            return
+            return False
         logger.debug('self.keywords_length: '+ str(self.keywords_length))
         self.observation = np.empty(self.keywords_length * self.parameter_size,float)
         buy_num_max = self.data[0][12]
@@ -268,7 +287,7 @@ class WordAgent(object):
         self.keywords_length = len(self.data)
         if self.keywords_length == 0:
             logger.info('self.keywords_length num is 0')
-            return
+            return False
         logger.debug('self.keywords_length: '+ str(self.keywords_length))
         self.observation = np.empty(self.keywords_length * self.parameter_size,float)
         popularity_max = self.data[0][1]
@@ -799,10 +818,10 @@ class WordAgent(object):
             dtypes[key] = box.dtype
         return keys, shapes, dtypes
 
-logger.debug('test openpyxl sucessful!')
-wordimp = WordAgent('../assert/collagen.xlsx','xlsx',agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value)
-wordimp.openExcel()
-wordimp.reset()
+#logger.debug('test openpyxl sucessful!')
+#wordimp = WordAgent('../assert/collagen.xlsx','xlsx',agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value)
+#wordimp.openExcel()
+#wordimp.reset()
 
     
     
