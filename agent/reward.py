@@ -47,9 +47,9 @@ def get_reward_value(observation,parameter_size,index,reward_type):
         transform_3 = observation[index*parameter_size + 4]
         converation_value = popularity*conversion + popularity*transform_1*5 + popularity*transform_2 + popularity*transform_3
         
-        buy_num = observation[index*parameter_size]
-        money_num = observation[index*parameter_size + 1]
-        roi_rate = observation[index*parameter_size + 2]   
+        buy_num = observation[index*parameter_size + 5]
+        money_num = observation[index*parameter_size + 6]
+        roi_rate = observation[index*parameter_size + 7]   
         roi_value = buy_num + money_num*2  + roi_rate * 5
         
         reward = converation_value + roi_value * 2.0

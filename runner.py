@@ -92,9 +92,9 @@ class runner_imp(object):
                 alg_kwargs['network'] = self.get_default_network(env_type)
 
         print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
-
-        try:
-            model = learn(
+        
+        
+        model = learn(
                 env=env,
                 seed=seed,
                 total_timesteps=total_timesteps,
@@ -102,12 +102,10 @@ class runner_imp(object):
                 **alg_kwargs
                 )
             
-        except Exception as err:    
-            
-            logger.error('learn error:' + str(err))
+        return model, env
+
         
 
-        return model, env
     
     def build_env(self,args):
         ncpu = multiprocessing.cpu_count()

@@ -94,7 +94,7 @@ class WordAgent(object):
                 continue;
             if row[2].value == 0:
                 continue;
-            if row[5].value == 0 and row[6].value == 0 and row[7].value == 0:
+            if row[9].value == 0 and row[10].value == 0 and row[11].value == 0:
                 continue;
             for cell in row:
                 ROW.append(cell.value)
@@ -132,13 +132,13 @@ class WordAgent(object):
         if self.reward_type == COLLAGE_HIGHCONVERSION:
             logger.info('init COLLAGE_HIGHCONVERSION')
             observation = self.init_observation()
-        elif self.reward_type == COLLAGE_HIGHFLOW.value:
+        elif self.reward_type == COLLAGE_HIGHFLOW:
             logger.info('init COLLAGE_HIGHFLOW')
             observation = self.init_observation_highflow()
-        elif self.reward_type == COLLAGE_HIGHROI.value:
+        elif self.reward_type == COLLAGE_HIGHROI:
             logger.info('init COLLAGE_HIGHROI')
             observation = self.init_observation_highroi()
-        elif self.reward_type == COLLAGE_HIGHROI_HIGHCONVERSION.value:
+        elif self.reward_type == COLLAGE_HIGHROI_HIGHCONVERSION:
             logger.info('init COLLAGE_HIGHROI_HIGHCONVERSION')
             observation = self.init_observation_highroi_hightconveration()
         
@@ -184,26 +184,26 @@ class WordAgent(object):
             return False
         logger.debug('self.keywords_length: '+ str(self.keywords_length))
         self.observation = np.empty(self.keywords_length * self.parameter_size,float)
-        buy_num_max = self.data[0][12]
-        buy_num_min = self.data[0][12]
-        money_num_max = self.data[0][14]
-        money_num_min = self.data[0][14]
-        roi_max = self.data[0][15]
-        roi_min = self.data[0][15]
+        buy_num_max = self.data[0][16]
+        buy_num_min = self.data[0][16]
+        money_num_max = self.data[0][18]
+        money_num_min = self.data[0][18]
+        roi_max = self.data[0][19]
+        roi_min = self.data[0][19]
         for i in range(self.keywords_length):
-            self.observation[i*self.parameter_size] = self.data[i][12]
+            self.observation[i*self.parameter_size] = self.data[i][16]
             if self.observation[i*self.parameter_size] > buy_num_max:
                 buy_num_max = self.observation[i*self.parameter_size]
             if self.observation[i*self.parameter_size] < buy_num_min:
                 buy_num_min = self.observation[i*self.parameter_size]
                 
-            self.observation[i*self.parameter_size + 1] = self.data[i][14]
+            self.observation[i*self.parameter_size + 1] = self.data[i][18]
             if self.observation[i*self.parameter_size + 1] > money_num_max:
                 money_num_max = self.observation[i*self.parameter_size + 1]
             if self.observation[i*self.parameter_size + 1] < money_num_min:
                 money_num_min = self.observation[i*self.parameter_size + 1]
                 
-            self.observation[i*self.parameter_size + 2] = self.data[i][15]
+            self.observation[i*self.parameter_size + 2] = self.data[i][19]
             if self.observation[i*self.parameter_size + 2] > roi_max:
                 roi_max = self.observation[i*self.parameter_size + 2]
             if self.observation[i*self.parameter_size + 2] < roi_min:
@@ -218,8 +218,8 @@ class WordAgent(object):
         logger.debug('buy_num_min:' + str(buy_num_min))
         logger.debug('money_num_max:' + str(money_num_max))
         logger.debug('money_num_min:' + str(money_num_min))
-        logger.debug('money_num_max:' + str(money_num_max))
-        logger.debug('money_num_min:' + str(money_num_min))
+        logger.debug('roi_max:' + str(roi_max))
+        logger.debug('roi_min:' + str(roi_min))
 
         for j in range(self.keywords_length):
             self.observation[j*self.parameter_size] = (self.observation[j*self.parameter_size] - buy_num_min) / (buy_num_max - buy_num_min)
@@ -228,7 +228,7 @@ class WordAgent(object):
             self.observation[j*self.parameter_size + 1] = (self.observation[j*self.parameter_size + 1] - money_num_min) / (money_num_max - money_num_min)
             normal_check_money_num+=self.observation[j*self.parameter_size + 1]
             
-            self.observation[j*self.parameter_size + 2] = (self.observation[j*self.parameter_size + 2] - money_num_min) / (money_num_max - money_num_min)
+            self.observation[j*self.parameter_size + 2] = (self.observation[j*self.parameter_size + 2] - roi_min) / (roi_max - roi_min)
             normal_check_roi_num+=self.observation[j*self.parameter_size + 2]
                 
         
@@ -292,10 +292,10 @@ class WordAgent(object):
         self.observation = np.empty(self.keywords_length * self.parameter_size,float)
         popularity_max = self.data[0][1]
         popularity_min = self.data[0][1]
-        click_num_max = self.data[0][8]
-        click_num_min = self.data[0][8]
-        click_rate_max = self.data[0][9]
-        click_rate_min = self.data[0][9]
+        click_num_max = self.data[0][12]
+        click_num_min = self.data[0][12]
+        click_rate_max = self.data[0][13]
+        click_rate_min = self.data[0][13]
         for i in range(self.keywords_length):
             self.observation[i*self.parameter_size] = self.data[i][1]
             if self.observation[i*self.parameter_size] > popularity_max:
@@ -303,13 +303,13 @@ class WordAgent(object):
             if self.observation[i*self.parameter_size] < popularity_min:
                 popularity_min = self.observation[i*self.parameter_size]
                 
-            self.observation[i*self.parameter_size + 1] = self.data[i][8]
+            self.observation[i*self.parameter_size + 1] = self.data[i][12]
             if self.observation[i*self.parameter_size + 1] > click_num_max:
                 click_num_max = self.observation[i*self.parameter_size + 1]
             if self.observation[i*self.parameter_size + 1] < click_num_min:
                 click_num_min = self.observation[i*self.parameter_size + 1]
                 
-            self.observation[i*self.parameter_size + 2] = self.data[i][9]
+            self.observation[i*self.parameter_size + 2] = self.data[i][13]
             if self.observation[i*self.parameter_size + 2] > click_rate_max:
                 click_rate_max = self.observation[i*self.parameter_size + 2]
             if self.observation[i*self.parameter_size + 2] < click_rate_min:
@@ -400,18 +400,18 @@ class WordAgent(object):
         popularity_min = self.data[0][1]
         conversion_max = self.data[0][2]
         conversion_min = self.data[0][2]
-        transform_1_max = self.data[0][5]
-        transform_1_min = self.data[0][5]
-        transform_2_max = self.data[0][6]
-        transform_2_min = self.data[0][6]
-        transform_3_max = self.data[0][7]
-        transform_3_min = self.data[0][7]
-        buy_num_max = self.data[0][12]
-        buy_num_min = self.data[0][12]
-        money_num_max = self.data[0][14]
-        money_num_min = self.data[0][14]
-        roi_max = self.data[0][15]
-        roi_min = self.data[0][15]
+        transform_1_max = self.data[0][9]
+        transform_1_min = self.data[0][9]
+        transform_2_max = self.data[0][10]
+        transform_2_min = self.data[0][10]
+        transform_3_max = self.data[0][11]
+        transform_3_min = self.data[0][11]
+        buy_num_max = self.data[0][16]
+        buy_num_min = self.data[0][16]
+        money_num_max = self.data[0][18]
+        money_num_min = self.data[0][18]
+        roi_max = self.data[0][19]
+        roi_min = self.data[0][19]
         for i in range(self.keywords_length):
             self.observation[i*self.parameter_size] = self.data[i][1]
             if self.observation[i*self.parameter_size] > popularity_max:
@@ -425,37 +425,37 @@ class WordAgent(object):
             if self.observation[i*self.parameter_size + 1] < conversion_min:
                 conversion_min = self.observation[i*self.parameter_size + 1]
                 
-            self.observation[i*self.parameter_size + 2] = self.data[i][5]
+            self.observation[i*self.parameter_size + 2] = self.data[i][9]
             if self.observation[i*self.parameter_size + 2] > transform_1_max:
                 transform_1_max = self.observation[i*self.parameter_size + 2]
             if self.observation[i*self.parameter_size + 2] < transform_1_min:
                 transform_1_min = self.observation[i*self.parameter_size + 2]
                 
-            self.observation[i*self.parameter_size + 3] = self.data[i][6]
+            self.observation[i*self.parameter_size + 3] = self.data[i][10]
             if self.observation[i*self.parameter_size + 3] > transform_2_max:
                 transform_2_max = self.observation[i*self.parameter_size + 3]
             if self.observation[i*self.parameter_size + 3] < transform_2_min:
                 transform_2_min = self.observation[i*self.parameter_size + 3]
                 
-            self.observation[i*self.parameter_size + 4] = self.data[i][7]
+            self.observation[i*self.parameter_size + 4] = self.data[i][11]
             if self.observation[i*self.parameter_size + 4] > transform_3_max:
                 transform_3_max = self.observation[i*self.parameter_size + 4]
             if self.observation[i*self.parameter_size + 4] < transform_3_min:
                 transform_3_min = self.observation[i*self.parameter_size + 4]
                 
-            self.observation[i*self.parameter_size + 5] = self.data[i][12]
+            self.observation[i*self.parameter_size + 5] = self.data[i][16]
             if self.observation[i*self.parameter_size] > buy_num_max:
                 buy_num_max = self.observation[i*self.parameter_size + 5]
             if self.observation[i*self.parameter_size] < buy_num_min:
                 buy_num_min = self.observation[i*self.parameter_size + 5]
                 
-            self.observation[i*self.parameter_size + 6] = self.data[i][14]
+            self.observation[i*self.parameter_size + 6] = self.data[i][18]
             if self.observation[i*self.parameter_size + 6] > money_num_max:
                 money_num_max = self.observation[i*self.parameter_size + 6]
             if self.observation[i*self.parameter_size + 6] < money_num_min:
                 money_num_min = self.observation[i*self.parameter_size + 6]
                 
-            self.observation[i*self.parameter_size + 7] = self.data[i][15]
+            self.observation[i*self.parameter_size + 7] = self.data[i][19]
             if self.observation[i*self.parameter_size + 7] > roi_max:
                 roi_max = self.observation[i*self.parameter_size + 7]
             if self.observation[i*self.parameter_size + 7] < roi_min:
@@ -476,8 +476,8 @@ class WordAgent(object):
         logger.debug('buy_num_min:' + str(buy_num_min))
         logger.debug('money_num_max:' + str(money_num_max))
         logger.debug('money_num_min:' + str(money_num_min))
-        logger.debug('money_num_max:' + str(money_num_max))
-        logger.debug('money_num_min:' + str(money_num_min))
+        logger.debug('roi_max:' + str(roi_max))
+        logger.debug('roi_min:' + str(roi_min))
         logger.debug('popularity_max:' + str(popularity_max))
         logger.debug('popularity_min:' + str(popularity_min))
         logger.debug('conversion_max:' + str(conversion_max))
@@ -510,7 +510,7 @@ class WordAgent(object):
             self.observation[j*self.parameter_size + 6] = (self.observation[j*self.parameter_size + 6] - money_num_min) / (money_num_max - money_num_min)
             normal_check_money_num+=self.observation[j*self.parameter_size + 1]
             
-            self.observation[j*self.parameter_size + 7] = (self.observation[j*self.parameter_size + 7] - money_num_min) / (money_num_max - money_num_min)
+            self.observation[j*self.parameter_size + 7] = (self.observation[j*self.parameter_size + 7] - roi_min) / (roi_max - roi_min)
             normal_check_roi_num+=self.observation[j*self.parameter_size + 2]
             
         
@@ -586,12 +586,12 @@ class WordAgent(object):
         popularity_min = self.data[0][1]
         conversion_max = self.data[0][2]
         conversion_min = self.data[0][2]
-        transform_1_max = self.data[0][5]
-        transform_1_min = self.data[0][5]
-        transform_2_max = self.data[0][6]
-        transform_2_min = self.data[0][6]
-        transform_3_max = self.data[0][7]
-        transform_3_min = self.data[0][7]
+        transform_1_max = self.data[0][9]
+        transform_1_min = self.data[0][9]
+        transform_2_max = self.data[0][10]
+        transform_2_min = self.data[0][10]
+        transform_3_max = self.data[0][11]
+        transform_3_min = self.data[0][11]
         for i in range(self.keywords_length):
             self.observation[i*self.parameter_size] = self.data[i][1]
             if self.observation[i*self.parameter_size] > popularity_max:
@@ -605,19 +605,19 @@ class WordAgent(object):
             if self.observation[i*self.parameter_size + 1] < conversion_min:
                 conversion_min = self.observation[i*self.parameter_size + 1]
                 
-            self.observation[i*self.parameter_size + 2] = self.data[i][5]
+            self.observation[i*self.parameter_size + 2] = self.data[i][9]
             if self.observation[i*self.parameter_size + 2] > transform_1_max:
                 transform_1_max = self.observation[i*self.parameter_size + 2]
             if self.observation[i*self.parameter_size + 2] < transform_1_min:
                 transform_1_min = self.observation[i*self.parameter_size + 2]
                 
-            self.observation[i*self.parameter_size + 3] = self.data[i][6]
+            self.observation[i*self.parameter_size + 3] = self.data[i][10]
             if self.observation[i*self.parameter_size + 3] > transform_2_max:
                 transform_2_max = self.observation[i*self.parameter_size + 3]
             if self.observation[i*self.parameter_size + 3] < transform_2_min:
                 transform_2_min = self.observation[i*self.parameter_size + 3]
                 
-            self.observation[i*self.parameter_size + 4] = self.data[i][7]
+            self.observation[i*self.parameter_size + 4] = self.data[i][11]
             if self.observation[i*self.parameter_size + 4] > transform_3_max:
                 transform_3_max = self.observation[i*self.parameter_size + 4]
             if self.observation[i*self.parameter_size + 4] < transform_3_min:
@@ -819,9 +819,7 @@ class WordAgent(object):
         return keys, shapes, dtypes
 
 #logger.debug('test openpyxl sucessful!')
-#wordimp = WordAgent('../assert/collagen.xlsx','xlsx',agent.reward.ProcessType.COLLAGE_HIGHCONVERSION.value)
-#wordimp.openExcel()
-#wordimp.reset()
+#wordimp = WordAgent('../assert/collagen.xlsx','xlsx',COLLAGE_HIGHCONVERSION)
 
     
     
