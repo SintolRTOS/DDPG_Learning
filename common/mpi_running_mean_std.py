@@ -3,7 +3,11 @@ try:
 except ImportError:
     MPI = None
 
-import tensorflow as tf, baselines.common.tf_util as U, numpy as np
+
+import sys 
+sys.path.append("..") 
+
+import tensorflow as tf, common.tf_util as U, numpy as np
 
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm

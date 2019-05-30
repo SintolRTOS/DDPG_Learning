@@ -185,10 +185,13 @@ class runner_imp(object):
         submodule = submodule or alg
         try:
             # first try to import the alg module from sintolrtos
-            alg_module = import_module('.'.join([alg, submodule]))
+            module_name = '.'.join([alg, submodule])
+            print('module_name:',module_name)
+            alg_module = import_module(module_name)
         except ImportError:
             # then from rl_algs
             alg_module = import_module('.'.join(['rl_' + 'algs', alg, submodule]))
+#            return None
 
         return alg_module
     
@@ -200,7 +203,10 @@ class runner_imp(object):
     def get_learn_function_defaults(self,alg, env_type):
         try:
             alg_defaults = self.get_alg_module(alg, 'defaults')
-            kwargs = getattr(alg_defaults, env_type)()
+            if alg_defaults == None:
+                kwargs = {}
+            else:
+                kwargs = getattr(alg_defaults, env_type)()
         except (ImportError, AttributeError):
             kwargs = {}
         return kwargs
