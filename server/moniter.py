@@ -123,10 +123,12 @@ class MoniterProcess(threading.Thread):
 #                    logger.info('current run_process:' + str(self.run_process))
                 
                 if line_str == 'print_rank_end' and not self.is_getrank:
-                    self.rank_end = not self.rank_end
+                    self.rank_end = True
                     continue
+                
                 if line_str == 'print_rank_start' and self.rank_end and not self.is_getrank:
                     self.rank_start = True
+                    continue
                     
                 if self.rank_end and not self.rank_start and not self.is_getrank:
                     self.key_words_list.append(line_str)
@@ -136,6 +138,9 @@ class MoniterProcess(threading.Thread):
 #                    logger.info('current log listenr keywordslist:')
 #                    logger.info(str(self.key_words_list))
                     self.read_file.close()
+                    break
+                
+                if self.rank_start:
                     break
          
     def lastline(self):

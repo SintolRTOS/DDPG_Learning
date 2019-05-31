@@ -119,8 +119,10 @@ class WordAgent(object):
         logger.info('print_rank_start')
         logger.info(rank.rank_value)
         logger.info('current rank value: ')
+        index = len(rank.rank_list) -1
         for n in range(len(rank.rank_list)):
-            logger.info(rank.rank_list[n])
+            logger.info(rank.rank_list[index])
+            index = index - 1
         logger.info('current rank words: ')
         logger.info('print_rank_end')
         
