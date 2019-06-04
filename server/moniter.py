@@ -16,6 +16,8 @@ import threading
 import datetime
 import time
 import os
+from threading import Lock
+mutex=Lock()
 
 global NOISE_TYPE_WORD
 NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.2,normal_0.1'
@@ -100,10 +102,12 @@ class MoniterProcess(threading.Thread):
             self.is_getrank = False
             self.is_get_per_process = False
             self.key_words_list.clear()
+            mutex.acquire()
             if os.path.exists(log_file):
 #                logger.info('open log_file:' + str(log_file))
                 self.read_file = open(log_file, 'rb')
             else:
+                mutex.release()
                 continue
                 
             self.pos = 0
@@ -142,6 +146,8 @@ class MoniterProcess(threading.Thread):
                 
                 if self.rank_start:
                     break
+            
+            mutex.release()
          
     def lastline(self):
         while True:
