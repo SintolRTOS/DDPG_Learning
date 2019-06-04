@@ -200,6 +200,7 @@ class Moniter(object):
         return True
     
     def get_process(self,process_id):
+        mutex.acquire()
         if self.processdic.__contains__(process_id):
             key_words_list,iscompleted,isstarted,run_process,os_id = self.processdic[process_id].get_current_process_info()
             retinfo = {}
@@ -208,7 +209,9 @@ class Moniter(object):
             retinfo['isstarted'] = isstarted
             retinfo['run_process'] = run_process
             retinfo['os_id'] = os_id
-            return retinfo     
+            mutex.release()
+            return retinfo  
+        mutex.release()
         return None
     
     def end_process(self,process_id):
