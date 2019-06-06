@@ -16,6 +16,7 @@ import threading
 import datetime
 import time
 import os
+import copy;
 from threading import Lock
 mutex=Lock()
 
@@ -91,6 +92,7 @@ class MoniterProcess(threading.Thread):
         self.rank_start = False
         self.is_getrank = False
         self.is_get_per_process = False;
+        self.key_words_list.clear()
         while True:
             time.sleep(10)
             if self.iscompleted:
@@ -101,7 +103,8 @@ class MoniterProcess(threading.Thread):
             self.rank_start = False
             self.is_getrank = False
             self.is_get_per_process = False
-            self.key_words_list.clear()
+#            self.key_words_list.clear()
+            temp_key_words_list = []
             mutex.acquire()
             if os.path.exists(log_file):
 #                logger.info('open log_file:' + str(log_file))
@@ -123,7 +126,13 @@ class MoniterProcess(threading.Thread):
                 
                 if self.is_get_per_process == True:
                     self.is_get_per_process = False
-                    self.run_process = line_str
+                    try:
+                        run_proess_float = float(line_str)
+                        self.run_process = run_proess_float
+                    except:
+                        logger.error('log run_processe error:' + str(line_str))
+                        
+                    continue
 #                    logger.info('current run_process:' + str(self.run_process))
                 
                 if line_str == 'print_rank_end' and not self.is_getrank:
@@ -135,9 +144,16 @@ class MoniterProcess(threading.Thread):
                     continue
                     
                 if self.rank_end and not self.rank_start and not self.is_getrank:
-                    self.key_words_list.append(line_str)
+                    temp_key_words_list.append(line_str)
                     
                 if not self.is_getrank and self.rank_start:
+                    if len(temp_key_words_list) == 13:
+#                        logger.info('temp_key_words_list.count:' + str(len(temp_key_words_list)))
+                        self.key_words_list = copy.deepcopy(temp_key_words_list)
+#                        logger.info('self.key_words_list:' + str(self.key_words_list))
+#                        logger.info('temp_key_words_list:' + str(temp_key_words_list))
+#                    else:
+#                        logger.error('temp_key_words_list.count:' + str(len(temp_key_words_list)))
                     self.is_getrank = True
 #                    logger.info('current log listenr keywordslist:')
 #                    logger.info(str(self.key_words_list))

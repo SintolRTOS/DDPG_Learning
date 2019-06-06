@@ -16,7 +16,7 @@ NOISE_TYPE_WORD = '--noise_type=adaptive-param_0.2,normal_0.1'
 
 DDPG_RUN_STR = '--alg=ddpg --env=wordgame --num_timesteps=1e6 --save_path=./models/wordgame --play'
 DDPG_RUN_STR2 = '--alg=ddpg --env=Pendulum-v0 --num_timesteps=1e6  --save_path=./models/Pendulum_0527 --load_path=./models/Pendulum_05247 --play '
-DDPG_RUN_STR3 = '--alg=ddpg --env=wordgame --reward_type=4 --num_timesteps=1e6 --save_path=./models/wordgame_0531 --load_path=./models/wordgame_0531 --assert_file=./assert/collagen2019-05-28.xlsx --play '
+DDPG_RUN_STR3 = '--alg=ddpg --env=wordgame --reward_type=1 --num_timesteps=1e6 --save_path=./models/wordgame_0531 --load_path=./models/wordgame_0531 --assert_file=./assert/probiotics2019-05-29.xlsx --play '
 DDPG_RUN_STR4 = '--alg=ppo2 --env=Pendulum-v0 --num_timesteps=0 --load_path=~/models/pong_20M_ppo2 --play '
 
 def main():
